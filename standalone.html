@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>УК San-Andreas Helper (offline)</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #f5c518;
+      --danger: #e74c3c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at top, #1b2838 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
+    header h1 { margin: 0 0 8px; font-size: 1.8rem; color: var(--accent); }
+    header p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    textarea {
+      width: 100%; min-height: 110px; resize: vertical; padding: 14px;
+      border-radius: 10px; border: 1px solid var(--border);
+      background: #0d121a; color: var(--text); font: inherit;
+    }
+    textarea:focus { outline: 2px solid rgba(245, 197, 24, 0.35); border-color: var(--accent); }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
+    .checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    button {
+      background: var(--accent); color: #111; border: none; border-radius: 10px;
+      padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip {
+      background: #243044; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
+    }
+    .chip:hover { color: var(--text); border-color: var(--accent); }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .badge {
+      background: #243044; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; font-size: 0.9rem;
+    }
+    .badge strong { color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td {
+      text-align: left; padding: 10px 8px;
+      border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    th { color: var(--muted); }
+    .stars { color: var(--danger); white-space: nowrap; }
+    .warn {
+      background: rgba(231, 76, 60, 0.12);
+      border: 1px solid rgba(231, 76, 60, 0.35);
+      color: #ffb4ab; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .info {
+      background: rgba(245, 197, 24, 0.08);
+      border: 1px solid rgba(245, 197, 24, 0.25);
+      color: #f5dfa0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .rp {
+      background: #0d121a; border: 1px dashed var(--border);
+      border-radius: 10px; padding: 14px; white-space: pre-wrap; line-height: 1.55;
+    }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      font-size: 0.78rem; background: #182030; border: 1px solid var(--border);
+      border-radius: 6px; padding: 3px 8px; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>УК San-Andreas Helper</h1>
+      <p>Offline-версия — работает без установки. Открой этот файл в браузере.</p>
+    </header>
+
+    <div class="card">
+      <div class="info">Файл: <strong>standalone.html</strong> — двойной клик и можно пользоваться.</div>
+    </div>
+
+    <section class="card">
+      <label for="input">Что произошло?</label>
+      <textarea id="input" placeholder="убил гос сотрудника, пытался скрыться с места, было гос оружие"></textarea>
+      <div class="row">
+        <label class="checkbox">
+          <input type="checkbox" id="stackWeapons" checked>
+          Вариант 3: 12.8 ч.2 + 12.8.1 при гос. оружии
+        </label>
+        <button id="analyzeBtn">Подобрать статьи</button>
+      </div>
+      <div class="examples">
+        <span class="chip" data-text="убил гос сотрудника, пытался скрыться с места, было гос оружие">Убийство копа</span>
+        <span class="chip" data-text="угнал машину и сбил человека">Угон + сбил</span>
+        <span class="chip" data-text="ограбил магазин с пistoletом">Разбой</span>
+        <span class="chip" data-text="храню пistolet и 5 грамм травы">Оружие + наркотики</span>
+      </div>
+    </section>
+
+    <section class="card" id="result" hidden>
+      <div id="warnings"></div>
+      <div class="meta" id="meta"></div>
+      <div id="tableWrap"></div>
+      <h3 style="margin: 18px 0 10px; color: var(--accent);">Текст для RP</h3>
+      <div class="rp" id="rpText"></div>
+      <div class="tags" id="tags"></div>
+    </section>
+  </div>
+
+  <script src="law-engine.js"></script>
+  <script>
+    const input = document.getElementById("input");
+    const stackWeapons = document.getElementById("stackWeapons");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const result = document.getElementById("result");
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        input.value = chip.dataset.text;
+        analyze();
+      });
+    });
+
+    analyzeBtn.addEventListener("click", analyze);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.ctrlKey) analyze();
+    });
+
+    function analyze() {
+      const text = input.value.trim();
+      if (!text) return;
+      render(window.analyzeLaw(text, stackWeapons.checked));
+    }
+
+    function render(data) {
+      result.hidden = false;
+      document.getElementById("warnings").innerHTML = (data.warnings || [])
+        .map((w) => `<div class="warn">${w}</div>`).join("");
+      document.getElementById("meta").innerHTML = `
+        <div class="badge">Розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
+        <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
+        <div class="badge">Лимит: <strong>${data.cappedYears || 0} лет</strong></div>`;
+      const tableWrap = document.getElementById("tableWrap");
+      if (!data.articles?.length) {
+        tableWrap.innerHTML = `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
+      } else {
+        tableWrap.innerHTML = `<table><thead><tr>
+          <th>Статья</th><th>Суть</th><th>Розыск</th><th>Наказание</th><th>Почему</th>
+        </tr></thead><tbody>${data.articles.map((a) => `<tr>
+          <td>${a.label}${a.smartMatch ? ' <span style="color:#f5c518;font-size:0.8em">умный поиск</span>' : ''}</td>
+          <td>${a.title}</td><td class="stars">${a.starsDisplay}</td>
+          <td>${a.punishment}</td><td>${a.reason}</td></tr>`).join("")}</tbody></table>`;
+      }
+      document.getElementById("rpText").textContent = data.rpText || "";
+      document.getElementById("tags").innerHTML = (data.tags || [])
+        .map((t) => `<span class="tag">${t}</span>`).join("");
+    }
+  </script>
+</body>
+</html>
