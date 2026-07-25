@@ -1,0 +1,10 @@
+[
+  {"id": "2.1", "article": "2", "part": 1, "title": "Перечень неприкосновенных лиц", "code": "NP"},
+  {"id": "4.1", "article": "4", "part": 1, "title": "Особый правовой статус", "code": "NP"},
+  {"id": "5.3", "article": "5", "part": 3, "title": "Кортеж неприкосновенного лица", "code": "NP"},
+  {"id": "6.1", "article": "6", "part": 1, "title": "Приостановление статуса", "code": "NP"},
+  {"id": "7.1", "article": "7", "part": 1, "title": "Запрет досмотра/задержания", "code": "NP"},
+  {"id": "7.2", "article": "7", "part": 2, "title": "Порядок при задержании за убийство", "code": "NP"},
+  {"id": "8.1", "article": "8", "part": 1, "title": "Ордер Access to Investigation (AI)", "code": "NP"},
+  {"id": "9.1", "article": "9", "part": 1, "title": "Независимость судей", "code": "NP"}
+]
