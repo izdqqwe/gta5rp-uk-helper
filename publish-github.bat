@@ -35,7 +35,7 @@ if not exist .git (
   git branch -M main
 )
 
-git add index.html law-engine.js pk-engine.js guides-engine.js guides-embed.js data/pk_articles.json data/guides.json open.bat README.md .gitignore .nojekyll publish-github.bat
+git add index.html law-engine.js pk-engine.js adv-engine.js guides-engine.js guides-embed.js data/pk_articles.json data/adv_articles.json data/guides.json open.bat README.md .gitignore .nojekyll publish-github.bat
 git commit -m "Publish UK San-Andreas Helper for GitHub Pages" 2>nul
 if errorlevel 1 (
   git add -A

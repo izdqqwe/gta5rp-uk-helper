@@ -46,6 +46,7 @@
     const parts = [];
     if (articles.uk?.length) parts.push(`УК: ${articles.uk.join(", ")}`);
     if (articles.pk?.length) parts.push(`ПК: ${articles.pk.join(", ")}`);
+    if (articles.adv?.length) parts.push(`ЗА: ${articles.adv.join(", ")}`);
     return parts.join(" · ");
   }
 
