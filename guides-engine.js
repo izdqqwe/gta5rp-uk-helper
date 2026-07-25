@@ -48,6 +48,7 @@
     if (articles.pk?.length) parts.push(`ПК: ${articles.pk.join(", ")}`);
     if (articles.adv?.length) parts.push(`ЗА: ${articles.adv.join(", ")}`);
     if (articles.p1?.length) parts.push(`П1: ${articles.p1.join(", ")}`);
+    if (articles.fib?.length) parts.push(`ФРБ: ${articles.fib.join(", ")}`);
     return parts.join(" · ");
   }
 

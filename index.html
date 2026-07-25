@@ -8,7 +8,7 @@
   <style>
     :root {
       --bg: #0f1419; --panel: #1a2332; --border: #2d3a4f; --text: #e8edf4;
-      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43;
+      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43; --fib: #3498db;
     }
     * { box-sizing: border-box; }
     body {
@@ -26,6 +26,7 @@
     .mode-btn.active { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
     .mode-btn.active.adv { background: var(--adv); border-color: var(--adv); color: #111; font-weight: 700; }
     .mode-btn.active.p1 { background: var(--p1); border-color: var(--p1); color: #111; font-weight: 700; }
+    .mode-btn.active.fib { background: var(--fib); border-color: var(--fib); color: #111; font-weight: 700; }
     .mode-btn.active.guides { background: #2ecc71; border-color: #2ecc71; color: #111; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
     label { display: block; margin-bottom: 8px; font-weight: 600; }
@@ -53,6 +54,7 @@
     .badge.pk strong { color: var(--pk); }
     .badge.adv strong { color: var(--adv); }
     .badge.p1 strong { color: var(--p1); }
+    .badge.fib strong { color: var(--fib); }
     table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { color: var(--muted); }
@@ -60,6 +62,7 @@
     .code-pk { color: var(--pk); font-size: 0.78rem; font-weight: 700; }
     .code-adv { color: var(--adv); font-size: 0.78rem; font-weight: 700; }
     .code-p1 { color: var(--p1); font-size: 0.78rem; font-weight: 700; }
+    .code-fib { color: var(--fib); font-size: 0.78rem; font-weight: 700; }
     .code-uk { color: var(--accent); font-size: 0.78rem; font-weight: 700; }
     .warn { background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.35); color: #ffb4ab; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
     .info { background: rgba(93, 173, 226, 0.1); border: 1px solid rgba(93, 173, 226, 0.3); color: #b8daf0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
@@ -70,6 +73,7 @@
     h3.section.pk { color: var(--pk); }
     h3.section.adv { color: var(--adv); }
     h3.section.p1 { color: var(--p1); }
+    h3.section.fib { color: var(--fib); }
     .study { font-size: 0.92rem; line-height: 1.55; color: var(--muted); }
     .study h3 { margin: 0 0 10px; font-size: 1rem; color: var(--text); }
     .study-grid { display: grid; gap: 12px; }
@@ -98,13 +102,14 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>УК / ПК / ЗА / П1 Helper</h1>
+      <h1>УК / ПК / ЗА / П1 / FIB Helper</h1>
       <p>Шпаргалка-помощник, пока учишь кодексы сам. Не заменяет знание — подсказывает статьи, чтобы свериться с текстом закона.</p>
       <div class="modes">
         <button type="button" class="mode-btn active" data-mode="uk">УК — преступления</button>
         <button type="button" class="mode-btn" data-mode="pk">ПК — процедура</button>
         <button type="button" class="mode-btn" data-mode="adv">ЗА — адвокатура</button>
         <button type="button" class="mode-btn" data-mode="p1">П1 — территории</button>
+        <button type="button" class="mode-btn" data-mode="fib">FIB — ФРБ</button>
         <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
         <button type="button" class="mode-btn" data-mode="guides">Ситуации</button>
       </div>
@@ -153,6 +158,16 @@
               <li>FIB / Форт / Кайо — особо охраняемые (красные)</li>
             </ol>
           </div>
+          <div class="study-block" style="border-color: rgba(52,152,219,0.25);">
+            <strong style="color: var(--fib);">FIB</strong> — <em>ФРБ</em>, полномочия, неприкос
+            <ol>
+              <li>Подчинение <strong>Генпрокурору</strong> (ст. 1.2)</li>
+              <li>Обязан предъявить <strong>бейдж/жетон</strong> (ст. 4.3)</li>
+              <li>Неприкос — ордер/суд/преступление/угроза жизни (ст. 17.7)</li>
+              <li>Оцепление — мин. 2 копа на улицу (ст. 13.3)</li>
+              <li>IB — надзор за госструктурами (ст. 9.с)</li>
+            </ol>
+          </div>
         </div>
         <p style="margin: 14px 0 0;">
           <strong style="color: var(--text);">Схема обучения:</strong>
@@ -189,6 +204,7 @@
   <script src="pk-engine.js"></script>
   <script src="adv-engine.js"></script>
   <script src="p1-engine.js"></script>
+  <script src="fib-engine.js"></script>
   <script src="guides-engine.js"></script>
   <script>
     const EXAMPLES = {
@@ -220,6 +236,13 @@
         ["LSPD", "зайти на участок lspd cdwl цель визита"],
         ["Форт", "доступ форт занкудo national guard пропуск"],
       ],
+      fib: [
+        ["Неприкос", "задержали fib без ордера задержание"],
+        ["Бейдж", "fib без бейджа не предъявил жетон"],
+        ["Оружие", "fib стрелял применил оружие задержание"],
+        ["Оцепление", "fib оцепил перекрыл улицу блокировка"],
+        ["IB", "ib fib надзор lspd проверка"],
+      ],
       both: [
         ["Полный кейс", "убил копа, задержал без миранды, боло 5 звезд"],
         ["Задержание + УК", "ограбил с оружием, задержание: наручники, миранда, адвокат"],
@@ -231,6 +254,7 @@
         ["Права", "права задержанного адвокат звонок"],
         ["Адвокат", "вызвать адвоката встреча 10 минут конфиденциально"],
         ["Территории", "кпз fib доступ адвокат 5 минут белая зона"],
+        ["FIB", "fib нарушил права без бейджа задержали fib"],
         ["Сила", "стадии применения силы кафф"],
       ],
     };
@@ -266,9 +290,10 @@
         btn.classList.toggle("pk", btn.dataset.mode === mode && mode === "pk");
         btn.classList.toggle("adv", btn.dataset.mode === mode && mode === "adv");
         btn.classList.toggle("p1", btn.dataset.mode === mode && mode === "p1");
+        btn.classList.toggle("fib", btn.dataset.mode === mode && mode === "fib");
         btn.classList.toggle("guides", btn.dataset.mode === mode && mode === "guides");
       });
-      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "guides";
+      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "fib" || mode === "guides";
       catBar.hidden = mode !== "guides";
       renderExamples();
       const placeholders = {
@@ -276,6 +301,7 @@
         pk: "задержал без миранды, не дал телефон, держал 2 часа, не записывал на камеру",
         adv: "гос адвокат на кпз, встреча 10 минут, не пустил адвоката, адвокатский запрос",
         p1: "зайти на fib кпз, адвокат после вызова 5 минут, выгнали с lspd без цели",
+        fib: "fib без бейджа, задержали fib, fib оцепил улицу, ib надзор lspd",
         both: "убил копа и скрылся; при задержании не зачитал миранду, не вызвал ОГП",
         guides: "как задержать / кафф / прокурор нарушает / неприкосновенность",
       };
@@ -325,6 +351,7 @@
       else if (mode === "pk") render({ ...window.analyzeProcedure(text), mode: "pk" });
       else if (mode === "adv") render({ ...window.analyzeAdvocacy(text), mode: "adv" });
       else if (mode === "p1") render({ ...window.analyzeTerritories(text), mode: "p1" });
+      else if (mode === "fib") render({ ...window.analyzeFib(text), mode: "fib" });
       else render(mergeBoth(window.analyzeLaw(text, stackWeapons.checked), window.analyzeProcedure(text)));
     }
 
@@ -358,9 +385,10 @@
       const isPk = data.mode === "pk";
       const isAdv = data.mode === "adv";
       const isP1 = data.mode === "p1";
+      const isFib = data.mode === "fib";
       const isBoth = data.mode === "both";
       const isGuides = data.mode === "guides";
-      const codeMode = isPk || isAdv || isP1;
+      const codeMode = isPk || isAdv || isP1 || isFib;
 
       document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) =>
         `<div class="warn">${w}</div>`
@@ -373,6 +401,8 @@
         meta.innerHTML = `<div class="badge adv">Режим: <strong>ЗА</strong> — адвокатура, договор, встреча, запрос</div>`;
       } else if (isP1) {
         meta.innerHTML = `<div class="badge p1">Режим: <strong>П1</strong> — закрытые/охраняемые территории</div>`;
+      } else if (isFib) {
+        meta.innerHTML = `<div class="badge fib">Режим: <strong>FIB</strong> — ФРБ, полномочия, неприкос, оружие</div>`;
       } else if (isPk) {
         meta.innerHTML = `<div class="badge pk">Режим: <strong>ПК</strong> — процедура, права, задержание (до 1 ч.)</div>`;
       } else if (isBoth) {
@@ -405,7 +435,7 @@
         tableWrap.innerHTML = arts.length ? renderTable(arts, codeMode) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
       }
 
-      document.getElementById("rpTitle").className = isGuides ? "section" : isP1 ? "section p1" : isAdv ? "section adv" : isPk ? "section pk" : "section";
+      document.getElementById("rpTitle").className = isGuides ? "section" : isFib ? "section fib" : isP1 ? "section p1" : isAdv ? "section adv" : isPk ? "section pk" : "section";
       document.getElementById("rpTitle").textContent = isGuides ? "Подсказка для RP" : "Текст для RP";
       document.getElementById("rpText").textContent = data.rpText || "";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
