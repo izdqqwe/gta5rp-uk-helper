@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>УК San-Andreas Helper</title>
+  <title>УК / ПК San-Andreas Helper</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖</text></svg>">
   <style>
     :root {
       --bg: #0f1419; --panel: #1a2332; --border: #2d3a4f; --text: #e8edf4;
-      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c;
+      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2;
     }
     * { box-sizing: border-box; }
     body {
@@ -18,6 +18,13 @@
     .wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
     header h1 { margin: 0 0 8px; font-size: 1.8rem; color: var(--accent); }
     header p { margin: 0; color: var(--muted); line-height: 1.5; }
+    .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .mode-btn {
+      background: #243044; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 10px; padding: 8px 16px; font: inherit; cursor: pointer;
+    }
+    .mode-btn.active { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
+    .mode-btn.active.pk { background: var(--pk); border-color: var(--pk); }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
     label { display: block; margin-bottom: 8px; font-weight: 600; }
     textarea {
@@ -27,7 +34,8 @@
     textarea:focus { outline: 2px solid rgba(245, 197, 24, 0.35); border-color: var(--accent); }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
     .checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); }
-    button {
+    #ukOptions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    button.primary {
       background: var(--accent); color: #111; border: none; border-radius: 10px;
       padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer;
     }
@@ -40,87 +48,244 @@
     .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
     .badge { background: #243044; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; }
     .badge strong { color: var(--accent); }
+    .badge.pk strong { color: var(--pk); }
     table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { color: var(--muted); }
     .stars { color: var(--danger); white-space: nowrap; }
+    .code-pk { color: var(--pk); font-size: 0.78rem; font-weight: 700; }
+    .code-uk { color: var(--accent); font-size: 0.78rem; font-weight: 700; }
     .warn { background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.35); color: #ffb4ab; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
-    .info { background: rgba(245, 197, 24, 0.08); border: 1px solid rgba(245, 197, 24, 0.25); color: #f5dfa0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+    .info { background: rgba(93, 173, 226, 0.1); border: 1px solid rgba(93, 173, 226, 0.3); color: #b8daf0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
     .rp { background: #0d121a; border: 1px dashed var(--border); border-radius: 10px; padding: 14px; white-space: pre-wrap; line-height: 1.55; }
     .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .tag { font-size: 0.78rem; background: #182030; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
+    h3.section { margin: 18px 0 10px; color: var(--accent); }
+    h3.section.pk { color: var(--pk); }
+    .study { font-size: 0.92rem; line-height: 1.55; color: var(--muted); }
+    .study h3 { margin: 0 0 10px; font-size: 1rem; color: var(--text); }
+    .study-grid { display: grid; gap: 12px; }
+    @media (min-width: 640px) { .study-grid { grid-template-columns: 1fr 1fr; } }
+    .study-block { background: #0d121a; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .study-block.uk { border-color: rgba(245, 197, 24, 0.25); }
+    .study-block.pk { border-color: rgba(93, 173, 226, 0.25); }
+    .study-block strong { color: var(--accent); }
+    .study-block.pk strong { color: var(--pk); }
+    .study ol { margin: 8px 0 0; padding-left: 1.2rem; }
+    .study li { margin-bottom: 6px; }
+    details.study-toggle summary { cursor: pointer; font-weight: 600; color: var(--text); list-style: none; }
+    details.study-toggle summary::-webkit-details-marker { display: none; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>УК San-Andreas Helper</h1>
-      <p>Онлайн-версия — работает 24/7 с телефона и ПК. Опиши RP-ситуацию — получишь статьи и наказание.</p>
+      <h1>УК / ПК San-Andreas Helper</h1>
+      <p>Шпаргалка-помощник, пока учишь кодексы сам. Не заменяет знание — подсказывает статьи, чтобы свериться с текстом закона.</p>
+      <div class="modes">
+        <button type="button" class="mode-btn active" data-mode="uk">УК — преступления</button>
+        <button type="button" class="mode-btn" data-mode="pk">ПК — процедура</button>
+        <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
+      </div>
     </header>
+    <section class="card study">
+      <details class="study-toggle" open>
+        <summary>Как учить УК и ПК с этим помощником</summary>
+        <div class="study-grid" style="margin-top: 14px;">
+          <div class="study-block uk">
+            <strong>УК</strong> — <em>что</em> сделал и <em>какое наказание</em>
+            <ol>
+              <li>Убийство копа → 6.3; попытка → 17.1 (не 6.2.1)</li>
+              <li>Уход / побег → 16.12</li>
+              <li>Гос. оружие → 12.8.2 + 12.8.1 (вариант 3)</li>
+              <li>★ и срок — по таблице в ответе</li>
+            </ol>
+          </div>
+          <div class="study-block pk">
+            <strong>ПК</strong> — <em>как</em> задержать и <em>чьи права</em>
+            <ol>
+              <li>Задержание — до <strong>1 часа</strong> (ст. 15)</li>
+              <li>Порядок: наручники → удостоверение → Миранда (ст. 17)</li>
+              <li>Звонок до 3 мин, адвокат, молчание (ст. 22)</li>
+              <li>Гос. служащий → ОГП + руководство (ст. 19)</li>
+              <li>Силa: присутствие → приказ → физ. → спец. → оружие (ст. 37)</li>
+            </ol>
+          </div>
+        </div>
+        <p style="margin: 14px 0 0;">
+          <strong style="color: var(--text);">Схема обучения:</strong>
+          опиши ситуацию → нажми «Подобрать» в режиме <strong>УК + ПК</strong> →
+          прочитай статьи → сверь с полным текстом кодекса → попробуй сам сформулировать RP без подсказки.
+        </p>
+      </details>
+    </section>
     <section class="card">
       <label for="input">Что произошло?</label>
       <textarea id="input" placeholder="убил гос сотрудника, пытался скрыться с места, было гос оружие"></textarea>
       <div class="row">
-        <label class="checkbox">
-          <input type="checkbox" id="stackWeapons" checked>
-          Вариант 3: 12.8 ч.2 + 12.8.1 при гос. оружии
-        </label>
-        <button id="analyzeBtn">Подобрать статьи</button>
+        <div id="ukOptions">
+          <label class="checkbox">
+            <input type="checkbox" id="stackWeapons" checked>
+            Вариант 3: 12.8 ч.2 + 12.8.1 при гос. оружии
+          </label>
+        </div>
+        <button type="button" class="primary" id="analyzeBtn">Подобрать</button>
       </div>
-      <div class="examples">
-        <span class="chip" data-text="убил гос сотрудника, пытался скрыться с места, было гос оружие">Убийство копа</span>
-        <span class="chip" data-text="угнал машину и сбил человека">Угон + сбил</span>
-        <span class="chip" data-text="ограбил магазин с пistoletом">Разбой</span>
-        <span class="chip" data-text="помеха задержанию от госа">Помеха задержанию</span>
-        <span class="chip" data-text="храню пistolet и 5 грамм травы">Оружие + наркотики</span>
-      </div>
+      <div class="examples" id="examples"></div>
     </section>
     <section class="card" id="result" hidden>
       <div id="warnings"></div>
       <div class="meta" id="meta"></div>
       <div id="tableWrap"></div>
-      <h3 style="margin: 18px 0 10px; color: var(--accent);">Текст для RP</h3>
+      <h3 class="section" id="rpTitle">Текст для RP</h3>
       <div class="rp" id="rpText"></div>
       <div class="tags" id="tags"></div>
     </section>
   </div>
   <script src="law-engine.js"></script>
+  <script src="pk-engine.js"></script>
   <script>
+    const EXAMPLES = {
+      uk: [
+        ["Убийство копа", "убил гос сотрудника, пытался скрыться с места, было гос оружие"],
+        ["Угон + сбил", "угнал машину и сбил человека"],
+        ["Разбой", "ограбил магазин с пistoletом"],
+        ["Помеха задержанию", "помеха задержанию от госа"],
+        ["Оружие + трава", "храню пistolet и 5 грамм травы"],
+      ],
+      pk: [
+        ["Задержание", "задержал без миранды, не дал телефон, держал больше часа"],
+        ["Гос + ОГП", "задержал гос сотрудника, не вызвал прокурора"],
+        ["Боло", "задержал по боло-розыску, не смотрел видео невиновности"],
+        ["Сила", "сразу стрелял без предупреждения, не соблюдал стадии силы"],
+        ["Арест", "арестовал, вторичный обыск, отправил в кпз"],
+      ],
+      both: [
+        ["Полный кейс", "убил копа, задержал без миранды, боло 5 звезд"],
+        ["Задержание + УК", "ограбил с оружием, задержание: наручники, миранда, адвокат"],
+      ],
+    };
+
+    let mode = "uk";
     const input = document.getElementById("input");
     const stackWeapons = document.getElementById("stackWeapons");
+    const ukOptions = document.getElementById("ukOptions");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const result = document.getElementById("result");
-    document.querySelectorAll(".chip").forEach((chip) => {
-      chip.addEventListener("click", () => { input.value = chip.dataset.text; analyze(); });
+    const examplesEl = document.getElementById("examples");
+
+    function setMode(next) {
+      mode = next;
+      document.querySelectorAll(".mode-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+        btn.classList.toggle("pk", btn.dataset.mode === mode && mode === "pk");
+      });
+      ukOptions.hidden = mode === "pk";
+      renderExamples();
+      const placeholders = {
+        uk: "убил гос сотрудника, пытался скрыться, было гос оружие",
+        pk: "задержал без миранды, не дал телефон, держал 2 часа, не записывал на камеру",
+        both: "убил копа и скрылся; при задержании не зачитал миранду, не вызвал ОГП",
+      };
+      input.placeholder = placeholders[mode];
+    }
+
+    function renderExamples() {
+      examplesEl.innerHTML = (EXAMPLES[mode] || EXAMPLES.uk).map(([label, text]) =>
+        `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}">${label}</span>`
+      ).join("");
+      examplesEl.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => { input.value = chip.dataset.text; analyze(); });
+      });
+    }
+
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
     });
     analyzeBtn.addEventListener("click", analyze);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.ctrlKey) analyze(); });
+
+    function mergeBoth(uk, pk) {
+      return {
+        mode: "both",
+        warnings: [...(uk.warnings || []), ...(pk.warnings || [])],
+        maxStars: uk.maxStars,
+        totalYears: uk.totalYears,
+        cappedYears: uk.cappedYears,
+        tags: [...new Set([...(uk.tags || []), ...(pk.tags || [])])].sort(),
+        ukArticles: uk.articles || [],
+        pkArticles: pk.articles || [],
+        rpText: [uk.rpText, pk.rpText].filter(Boolean).join("\n\n"),
+      };
+    }
+
     function analyze() {
       const text = input.value.trim();
       if (!text) return;
-      render(window.analyzeLaw(text, stackWeapons.checked));
+      if (mode === "uk") render({ ...window.analyzeLaw(text, stackWeapons.checked), mode: "uk" });
+      else if (mode === "pk") render({ ...window.analyzeProcedure(text), mode: "pk" });
+      else render(mergeBoth(window.analyzeLaw(text, stackWeapons.checked), window.analyzeProcedure(text)));
     }
+
+    function renderTable(articles, isPk) {
+      const col3 = isPk ? "Требование / норма" : "Розыск";
+      const col4 = isPk ? "Примечание" : "Наказание";
+      return `<table><thead><tr>
+        <th>Статья</th><th>Суть</th><th>${col3}</th><th>${col4}</th><th>Почему</th>
+      </tr></thead><tbody>${articles.map((a) => `<tr>
+        <td>${a.label}${a.smartMatch ? ' <span style="color:#f5c518;font-size:0.8em">умный поиск</span>' : ''}</td>
+        <td>${a.title}</td>
+        <td class="${isPk ? "" : "stars"}">${isPk ? (a.requirement || a.punishment) : a.starsDisplay}</td>
+        <td>${isPk ? (a.note || "—") : a.punishment}</td>
+        <td>${a.reason}</td></tr>`).join("")}</tbody></table>`;
+    }
+
     function render(data) {
       result.hidden = false;
-      document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) => `<div class="warn">${w}</div>`).join("");
-      document.getElementById("meta").innerHTML = `
-        <div class="badge">Розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
-        <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
-        <div class="badge">Лимит: <strong>${data.cappedYears || 0} лет</strong></div>`;
-      const tableWrap = document.getElementById("tableWrap");
-      if (!data.articles?.length) {
-        tableWrap.innerHTML = `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
+      const isPk = data.mode === "pk";
+      const isBoth = data.mode === "both";
+
+      document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) =>
+        `<div class="warn">${w}</div>`
+      ).join("");
+
+      const meta = document.getElementById("meta");
+      if (isPk) {
+        meta.innerHTML = `<div class="badge pk">Режим: <strong>ПК</strong> — процедура, права, задержание (до 1 ч.)</div>`;
+      } else if (isBoth) {
+        meta.innerHTML = `
+          <div class="badge">УК — розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
+          <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
+          <div class="badge pk">ПК — статей: <strong>${data.pkArticles.length}</strong></div>`;
       } else {
-        tableWrap.innerHTML = `<table><thead><tr>
-          <th>Статья</th><th>Суть</th><th>Розыск</th><th>Наказание</th><th>Почему</th>
-        </tr></thead><tbody>${data.articles.map((a) => `<tr>
-          <td>${a.label}${a.smartMatch ? ' <span style="color:#f5c518;font-size:0.8em">умный поиск</span>' : ''}</td>
-          <td>${a.title}</td><td class="stars">${a.starsDisplay}</td>
-          <td>${a.punishment}</td><td>${a.reason}</td></tr>`).join("")}</tbody></table>`;
+        meta.innerHTML = `
+          <div class="badge">Розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
+          <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
+          <div class="badge">Лимит: <strong>${data.cappedYears || 0} лет</strong></div>`;
       }
+
+      const tableWrap = document.getElementById("tableWrap");
+      if (isBoth) {
+        let html = "";
+        if (data.ukArticles.length) {
+          html += `<h3 class="section"><span class="code-uk">УК</span> Уголовный кодекс</h3>${renderTable(data.ukArticles, false)}`;
+        }
+        if (data.pkArticles.length) {
+          html += `<h3 class="section pk"><span class="code-pk">ПК</span> Процессуальный кодекс</h3>${renderTable(data.pkArticles, true)}`;
+        }
+        if (!html) html = `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
+        tableWrap.innerHTML = html;
+      } else {
+        const arts = data.articles || [];
+        tableWrap.innerHTML = arts.length ? renderTable(arts, isPk) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
+      }
+
+      document.getElementById("rpTitle").className = isPk ? "section pk" : "section";
       document.getElementById("rpText").textContent = data.rpText || "";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
     }
+
+    setMode("both");
   </script>
 </body>
 </html>
