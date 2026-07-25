@@ -24,7 +24,7 @@
       border-radius: 10px; padding: 8px 16px; font: inherit; cursor: pointer;
     }
     .mode-btn.active { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
-    .mode-btn.active.pk { background: var(--pk); border-color: var(--pk); }
+    .mode-btn.active.guides { background: #2ecc71; border-color: #2ecc71; color: #111; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
     label { display: block; margin-bottom: 8px; font-weight: 600; }
     textarea {
@@ -75,6 +75,16 @@
     .study li { margin-bottom: 6px; }
     details.study-toggle summary { cursor: pointer; font-weight: 600; color: var(--text); list-style: none; }
     details.study-toggle summary::-webkit-details-marker { display: none; }
+    .guide-card { background: #0d121a; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .guide-card h4 { margin: 0 0 8px; color: #2ecc71; font-size: 1.05rem; }
+    .guide-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .guide-card ol { margin: 0; padding-left: 1.2rem; line-height: 1.5; }
+    .guide-card li { margin-bottom: 6px; }
+    .guide-warn { margin-top: 10px; padding: 8px 10px; background: rgba(245,197,24,0.08); border-radius: 8px; font-size: 0.88rem; color: #f5dfa0; }
+    .guide-rp { margin-top: 10px; padding: 8px 10px; background: rgba(46,204,113,0.08); border-radius: 8px; font-size: 0.88rem; color: #a8e6c3; }
+    .cat-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .cat-btn { background: #182030; border: 1px solid var(--border); color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
+    .cat-btn.active { background: #2ecc71; color: #111; border-color: #2ecc71; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -86,7 +96,9 @@
         <button type="button" class="mode-btn active" data-mode="uk">УК — преступления</button>
         <button type="button" class="mode-btn" data-mode="pk">ПК — процедура</button>
         <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
+        <button type="button" class="mode-btn" data-mode="guides">Ситуации</button>
       </div>
+      <div class="cat-bar" id="catBar" hidden></div>
     </header>
     <section class="card study">
       <details class="study-toggle" open>
@@ -142,8 +154,10 @@
       <div class="tags" id="tags"></div>
     </section>
   </div>
+  <script src="guides-embed.js"></script>
   <script src="law-engine.js"></script>
   <script src="pk-engine.js"></script>
+  <script src="guides-engine.js"></script>
   <script>
     const EXAMPLES = {
       uk: [
@@ -164,30 +178,59 @@
         ["Полный кейс", "убил копа, задержал без миранды, боло 5 звезд"],
         ["Задержание + УК", "ограбил с оружием, задержание: наручники, миранда, адвокат"],
       ],
+      guides: [
+        ["Как каффать", "как задержать наручники миранда"],
+        ["Неприкос", "неприкосновенность досмотр usss"],
+        ["Прокурор", "прокурор нарушает процедуру что делать"],
+        ["Права", "права задержанного адвокат звонок"],
+        ["Сила", "стадии применения силы кафф"],
+      ],
     };
 
-    let mode = "uk";
+    let mode = "both";
+    let guideCategory = "all";
     const input = document.getElementById("input");
     const stackWeapons = document.getElementById("stackWeapons");
     const ukOptions = document.getElementById("ukOptions");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const result = document.getElementById("result");
     const examplesEl = document.getElementById("examples");
+    const catBar = document.getElementById("catBar");
+
+    async function initCategories() {
+      const cats = await window.listGuideCategories?.() || [];
+      catBar.innerHTML = [`<button type="button" class="cat-btn active" data-cat="all">Все</button>`]
+        .concat(cats.map((c) => `<button type="button" class="cat-btn" data-cat="${c}">${c}</button>`))
+        .join("");
+      catBar.querySelectorAll(".cat-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          guideCategory = btn.dataset.cat;
+          catBar.querySelectorAll(".cat-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          analyze();
+        });
+      });
+    }
 
     function setMode(next) {
       mode = next;
       document.querySelectorAll(".mode-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
         btn.classList.toggle("pk", btn.dataset.mode === mode && mode === "pk");
+        btn.classList.toggle("guides", btn.dataset.mode === mode && mode === "guides");
       });
-      ukOptions.hidden = mode === "pk";
+      ukOptions.hidden = mode === "pk" || mode === "guides";
+      catBar.hidden = mode !== "guides";
       renderExamples();
       const placeholders = {
         uk: "убил гос сотрудника, пытался скрыться, было гос оружие",
         pk: "задержал без миранды, не дал телефон, держал 2 часа, не записывал на камеру",
         both: "убил копа и скрылся; при задержании не зачитал миранду, не вызвал ОГП",
+        guides: "как задержать / кафф / прокурор нарушает / неприкосновенность",
       };
-      input.placeholder = placeholders[mode];
+      input.placeholder = placeholders[mode] || placeholders.guides;
+      if (mode === "guides" && !catBar.dataset.ready) {
+        initCategories().then(() => { catBar.dataset.ready = "1"; });
+      }
     }
 
     function renderExamples() {
@@ -219,12 +262,28 @@
       };
     }
 
-    function analyze() {
+    async function analyze() {
       const text = input.value.trim();
+      if (mode === "guides") {
+        render(await window.analyzeGuides(text, guideCategory));
+        return;
+      }
       if (!text) return;
       if (mode === "uk") render({ ...window.analyzeLaw(text, stackWeapons.checked), mode: "uk" });
       else if (mode === "pk") render({ ...window.analyzeProcedure(text), mode: "pk" });
       else render(mergeBoth(window.analyzeLaw(text, stackWeapons.checked), window.analyzeProcedure(text)));
+    }
+
+    function renderGuides(data) {
+      const items = data.items || [];
+      if (!items.length) return `<p style="color:#8b9cb3">Сценарии не найдены. Выбери категорию или опиши ситуацию.</p>`;
+      return items.map((g) => `<article class="guide-card">
+        <h4>${g.title}</h4>
+        <div class="guide-meta">${g.category} · ${g.audience}${g.articles ? " · " + g.articles : ""}${g.score ? " · score " + g.score : ""}</div>
+        <ol>${g.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+        ${g.warn ? `<div class="guide-warn">${g.warn}</div>` : ""}
+        ${g.rp ? `<div class="guide-rp"><strong>RP:</strong> ${g.rp}</div>` : ""}
+      </article>`).join("");
     }
 
     function renderTable(articles, isPk) {
@@ -244,13 +303,16 @@
       result.hidden = false;
       const isPk = data.mode === "pk";
       const isBoth = data.mode === "both";
+      const isGuides = data.mode === "guides";
 
       document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) =>
         `<div class="warn">${w}</div>`
       ).join("");
 
       const meta = document.getElementById("meta");
-      if (isPk) {
+      if (isGuides) {
+        meta.innerHTML = `<div class="badge" style="border-color:#2ecc71"><span style="color:#2ecc71">Ситуации:</span> <strong>${data.items?.length || 0}</strong> сценариев</div>`;
+      } else if (isPk) {
         meta.innerHTML = `<div class="badge pk">Режим: <strong>ПК</strong> — процедура, права, задержание (до 1 ч.)</div>`;
       } else if (isBoth) {
         meta.innerHTML = `
@@ -265,7 +327,9 @@
       }
 
       const tableWrap = document.getElementById("tableWrap");
-      if (isBoth) {
+      if (isGuides) {
+        tableWrap.innerHTML = renderGuides(data);
+      } else if (isBoth) {
         let html = "";
         if (data.ukArticles.length) {
           html += `<h3 class="section"><span class="code-uk">УК</span> Уголовный кодекс</h3>${renderTable(data.ukArticles, false)}`;
@@ -280,12 +344,14 @@
         tableWrap.innerHTML = arts.length ? renderTable(arts, isPk) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
       }
 
-      document.getElementById("rpTitle").className = isPk ? "section pk" : "section";
+      document.getElementById("rpTitle").className = isGuides ? "section" : isPk ? "section pk" : "section";
+      document.getElementById("rpTitle").textContent = isGuides ? "Подсказка для RP" : "Текст для RP";
       document.getElementById("rpText").textContent = data.rpText || "";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
     }
 
     setMode("both");
+    analyze();
   </script>
 </body>
 </html>
