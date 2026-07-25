@@ -8,7 +8,7 @@
   <style>
     :root {
       --bg: #0f1419; --panel: #1a2332; --border: #2d3a4f; --text: #e8edf4;
-      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2; --adv: #bb86fc;
+      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43;
     }
     * { box-sizing: border-box; }
     body {
@@ -25,6 +25,7 @@
     }
     .mode-btn.active { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
     .mode-btn.active.adv { background: var(--adv); border-color: var(--adv); color: #111; font-weight: 700; }
+    .mode-btn.active.p1 { background: var(--p1); border-color: var(--p1); color: #111; font-weight: 700; }
     .mode-btn.active.guides { background: #2ecc71; border-color: #2ecc71; color: #111; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
     label { display: block; margin-bottom: 8px; font-weight: 600; }
@@ -51,12 +52,14 @@
     .badge strong { color: var(--accent); }
     .badge.pk strong { color: var(--pk); }
     .badge.adv strong { color: var(--adv); }
+    .badge.p1 strong { color: var(--p1); }
     table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { color: var(--muted); }
     .stars { color: var(--danger); white-space: nowrap; }
     .code-pk { color: var(--pk); font-size: 0.78rem; font-weight: 700; }
     .code-adv { color: var(--adv); font-size: 0.78rem; font-weight: 700; }
+    .code-p1 { color: var(--p1); font-size: 0.78rem; font-weight: 700; }
     .code-uk { color: var(--accent); font-size: 0.78rem; font-weight: 700; }
     .warn { background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.35); color: #ffb4ab; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
     .info { background: rgba(93, 173, 226, 0.1); border: 1px solid rgba(93, 173, 226, 0.3); color: #b8daf0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
@@ -66,6 +69,7 @@
     h3.section { margin: 18px 0 10px; color: var(--accent); }
     h3.section.pk { color: var(--pk); }
     h3.section.adv { color: var(--adv); }
+    h3.section.p1 { color: var(--p1); }
     .study { font-size: 0.92rem; line-height: 1.55; color: var(--muted); }
     .study h3 { margin: 0 0 10px; font-size: 1rem; color: var(--text); }
     .study-grid { display: grid; gap: 12px; }
@@ -94,12 +98,13 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>УК / ПК / ЗА San-Andreas Helper</h1>
+      <h1>УК / ПК / ЗА / П1 Helper</h1>
       <p>Шпаргалка-помощник, пока учишь кодексы сам. Не заменяет знание — подсказывает статьи, чтобы свериться с текстом закона.</p>
       <div class="modes">
         <button type="button" class="mode-btn active" data-mode="uk">УК — преступления</button>
         <button type="button" class="mode-btn" data-mode="pk">ПК — процедура</button>
         <button type="button" class="mode-btn" data-mode="adv">ЗА — адвокатура</button>
+        <button type="button" class="mode-btn" data-mode="p1">П1 — территории</button>
         <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
         <button type="button" class="mode-btn" data-mode="guides">Ситуации</button>
       </div>
@@ -138,6 +143,16 @@
               <li>Неприкос гос. адвоката — ордер/суд/угроза жизни (ст. 3.2)</li>
             </ol>
           </div>
+          <div class="study-block" style="border-color: rgba(255,159,67,0.25);">
+            <strong style="color: var(--p1);">П1</strong> — <em>территории</em>, доступ, цвета зон
+            <ol>
+              <li>Белый — прилегающие + холл; жёлтый — охраняемые; красный — особо охраняемые</li>
+              <li>Цель визита: CDWL, трудоустройство, заявление и т.д. (ст. 2)</li>
+              <li>КПЗ = клетки + допросные + коридоры</li>
+              <li>Адвокат на КПЗ — только по вызову, уйти за <strong>5 мин</strong></li>
+              <li>FIB / Форт / Кайо — особо охраняемые (красные)</li>
+            </ol>
+          </div>
         </div>
         <p style="margin: 14px 0 0;">
           <strong style="color: var(--text);">Схема обучения:</strong>
@@ -173,6 +188,7 @@
   <script src="law-engine.js"></script>
   <script src="pk-engine.js"></script>
   <script src="adv-engine.js"></script>
+  <script src="p1-engine.js"></script>
   <script src="guides-engine.js"></script>
   <script>
     const EXAMPLES = {
@@ -197,6 +213,13 @@
         ["Запрос", "адвокатский запрос документы 24 часа state fraction"],
         ["Частный", "частный адвокат лицензия приложение договор"],
       ],
+      p1: [
+        ["КПЗ", "адвокат на кпз fib вызов 5 минут покинуть"],
+        ["FIB", "зайти в fib офис пропуск доступ"],
+        ["Цвета", "белая желтая красная зона прилегающая охраняемая"],
+        ["LSPD", "зайти на участок lspd cdwl цель визита"],
+        ["Форт", "доступ форт занкудo national guard пропуск"],
+      ],
       both: [
         ["Полный кейс", "убил копа, задержал без миранды, боло 5 звезд"],
         ["Задержание + УК", "ограбил с оружием, задержание: наручники, миранда, адвокат"],
@@ -207,6 +230,7 @@
         ["Прокурор", "прокурор нарушает процедуру что делать"],
         ["Права", "права задержанного адвокат звонок"],
         ["Адвокат", "вызвать адвоката встреча 10 минут конфиденциально"],
+        ["Территории", "кпз fib доступ адвокат 5 минут белая зона"],
         ["Сила", "стадии применения силы кафф"],
       ],
     };
@@ -241,15 +265,17 @@
         btn.classList.toggle("active", btn.dataset.mode === mode);
         btn.classList.toggle("pk", btn.dataset.mode === mode && mode === "pk");
         btn.classList.toggle("adv", btn.dataset.mode === mode && mode === "adv");
+        btn.classList.toggle("p1", btn.dataset.mode === mode && mode === "p1");
         btn.classList.toggle("guides", btn.dataset.mode === mode && mode === "guides");
       });
-      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "guides";
+      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "guides";
       catBar.hidden = mode !== "guides";
       renderExamples();
       const placeholders = {
         uk: "убил гос сотрудника, пытался скрыться, было гос оружие",
         pk: "задержал без миранды, не дал телефон, держал 2 часа, не записывал на камеру",
         adv: "гос адвокат на кпз, встреча 10 минут, не пустил адвоката, адвокатский запрос",
+        p1: "зайти на fib кпз, адвокат после вызова 5 минут, выгнали с lspd без цели",
         both: "убил копа и скрылся; при задержании не зачитал миранду, не вызвал ОГП",
         guides: "как задержать / кафф / прокурор нарушает / неприкосновенность",
       };
@@ -298,6 +324,7 @@
       if (mode === "uk") render({ ...window.analyzeLaw(text, stackWeapons.checked), mode: "uk" });
       else if (mode === "pk") render({ ...window.analyzeProcedure(text), mode: "pk" });
       else if (mode === "adv") render({ ...window.analyzeAdvocacy(text), mode: "adv" });
+      else if (mode === "p1") render({ ...window.analyzeTerritories(text), mode: "p1" });
       else render(mergeBoth(window.analyzeLaw(text, stackWeapons.checked), window.analyzeProcedure(text)));
     }
 
@@ -313,16 +340,16 @@
       </article>`).join("");
     }
 
-    function renderTable(articles, isPk) {
-      const col3 = isPk ? "Требование / норма" : "Розыск";
-      const col4 = isPk ? "Примечание" : "Наказание";
+    function renderTable(articles, codeMode) {
+      const col3 = codeMode ? "Требование / норма" : "Розыск";
+      const col4 = codeMode ? "Примечание" : "Наказание";
       return `<table><thead><tr>
         <th>Статья</th><th>Суть</th><th>${col3}</th><th>${col4}</th><th>Почему</th>
       </tr></thead><tbody>${articles.map((a) => `<tr>
         <td>${a.label}${a.smartMatch ? ' <span style="color:#f5c518;font-size:0.8em">умный поиск</span>' : ''}</td>
         <td>${a.title}</td>
-        <td class="${isPk ? "" : "stars"}">${isPk ? (a.requirement || a.punishment) : a.starsDisplay}</td>
-        <td>${isPk ? (a.note || "—") : a.punishment}</td>
+        <td class="${codeMode ? "" : "stars"}">${codeMode ? (a.requirement || a.punishment) : a.starsDisplay}</td>
+        <td>${codeMode ? (a.note || "—") : a.punishment}</td>
         <td>${a.reason}</td></tr>`).join("")}</tbody></table>`;
     }
 
@@ -330,8 +357,10 @@
       result.hidden = false;
       const isPk = data.mode === "pk";
       const isAdv = data.mode === "adv";
+      const isP1 = data.mode === "p1";
       const isBoth = data.mode === "both";
       const isGuides = data.mode === "guides";
+      const codeMode = isPk || isAdv || isP1;
 
       document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) =>
         `<div class="warn">${w}</div>`
@@ -342,6 +371,8 @@
         meta.innerHTML = `<div class="badge" style="border-color:#2ecc71"><span style="color:#2ecc71">Ситуации:</span> <strong>${data.items?.length || 0}</strong> сценариев</div>`;
       } else if (isAdv) {
         meta.innerHTML = `<div class="badge adv">Режим: <strong>ЗА</strong> — адвокатура, договор, встреча, запрос</div>`;
+      } else if (isP1) {
+        meta.innerHTML = `<div class="badge p1">Режим: <strong>П1</strong> — закрытые/охраняемые территории</div>`;
       } else if (isPk) {
         meta.innerHTML = `<div class="badge pk">Режим: <strong>ПК</strong> — процедура, права, задержание (до 1 ч.)</div>`;
       } else if (isBoth) {
@@ -371,10 +402,10 @@
         tableWrap.innerHTML = html;
       } else {
         const arts = data.articles || [];
-        tableWrap.innerHTML = arts.length ? renderTable(arts, isPk) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
+        tableWrap.innerHTML = arts.length ? renderTable(arts, codeMode) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
       }
 
-      document.getElementById("rpTitle").className = isGuides ? "section" : isAdv ? "section adv" : isPk ? "section pk" : "section";
+      document.getElementById("rpTitle").className = isGuides ? "section" : isP1 ? "section p1" : isAdv ? "section adv" : isPk ? "section pk" : "section";
       document.getElementById("rpTitle").textContent = isGuides ? "Подсказка для RP" : "Текст для RP";
       document.getElementById("rpText").textContent = data.rpText || "";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
