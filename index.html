@@ -10,7 +10,7 @@
       --bg: #0a0e14; --panel: #141c28; --panel-2: #0f1520; --border: #2a3548;
       --text: #eef2f8; --muted: #8b9cb3;
       --accent: #f5c518; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43;
-      --fib: #3498db; --np: #d4af37; --sit: #2ecc71; --laws: #7f8c9a;
+      --fib: #3498db; --np: #d4af37; --sit: #2ecc71; --laws: #7f8c9a; --scn: #a855f7;
       --radius: 14px; --shadow: 0 8px 32px rgba(0,0,0,0.35);
     }
     * { box-sizing: border-box; }
@@ -32,16 +32,17 @@
     .hero p { margin: 0 auto; max-width: 520px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
 
     .main-tabs {
-      display: flex; gap: 0; max-width: 360px; margin: 22px auto 0;
+      display: flex; gap: 0; max-width: 520px; margin: 22px auto 0;
       background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
       box-shadow: var(--shadow);
     }
     .main-tab {
       flex: 1; border: none; background: transparent; color: var(--muted);
-      padding: 11px 20px; border-radius: 999px; font: inherit; font-weight: 600;
+      padding: 11px 14px; border-radius: 999px; font: inherit; font-weight: 600; font-size: 0.9rem;
       cursor: pointer; transition: all 0.2s;
     }
-    .main-tab.active.situations { background: var(--sit); color: #0a1a10; }
+    .main-tab.active.scenarios { background: var(--scn); color: #fff; }
+    .main-tab.active.search { background: var(--accent); color: #111; }
     .main-tab.active.laws { background: var(--laws); color: #111; }
 
     .card {
@@ -64,10 +65,14 @@
 
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
     button.primary {
-      background: linear-gradient(135deg, var(--sit), #27ae60); color: #0a1a10;
+      background: linear-gradient(135deg, var(--accent), #e6b800); color: #111;
       border: none; border-radius: 12px; padding: 12px 24px; font: inherit;
-      font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(46,204,113,0.25);
+      font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(245,197,24,0.2);
       transition: transform 0.15s;
+    }
+    button.primary.scenarios {
+      background: linear-gradient(135deg, var(--scn), #7c3aed); color: #fff;
+      box-shadow: 0 4px 14px rgba(168,85,247,0.3);
     }
     button.primary:hover { transform: translateY(-1px); }
     .checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.88rem; }
@@ -130,10 +135,13 @@
       transition: border-color 0.15s;
     }
     .guide-card.cat-fib { border-left-color: var(--fib); }
-    .guide-card.cat-адвокат, .guide-card.cat-adv { border-left-color: var(--adv); }
+    .guide-card.cat-адвокат { border-left-color: var(--adv); }
     .guide-card.cat-территории { border-left-color: var(--p1); }
     .guide-card.cat-неприкос { border-left-color: var(--np); }
-    .guide-card.cat-задержание, .guide-card.cat-права { border-left-color: var(--pk); }
+    .guide-card.cat-задержание, .guide-card.cat-арест, .guide-card.cat-обыск { border-left-color: var(--pk); }
+    .guide-card.cat-права { border-left-color: var(--pk); }
+    .guide-card.cat-преступления { border-left-color: var(--accent); }
+    .guide-card.cat-сила, .guide-card.cat-жалобы { border-left-color: #e74c3c; }
     .guide-card h4 { margin: 0 0 6px; font-size: 1.02rem; color: var(--text); }
     .guide-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
     .guide-meta span {
@@ -224,26 +232,30 @@
   <div class="wrap">
     <header class="hero">
       <h1>San-Andreas Law Helper</h1>
-      <p>Опиши ситуацию — получи пошаговый сценарий и статьи из всех кодексов. Сверься с полным текстом во вкладке «Законы».</p>
+      <p id="heroText">Пошаговые сценарии: задержание, права, FIB, неприкос, территории и др.</p>
       <div class="main-tabs">
-        <button type="button" class="main-tab active situations" data-mode="situations">Ситуации</button>
+        <button type="button" class="main-tab active scenarios" data-mode="scenarios">Сценарии</button>
+        <button type="button" class="main-tab search" data-mode="search">Подбор</button>
         <button type="button" class="main-tab laws" data-mode="laws">Законы</button>
       </div>
     </header>
 
-    <section class="card" id="situationsSection">
-      <label class="card-label" for="input">Что произошло?</label>
-      <textarea id="input" placeholder="убил копа и скрылся; при задержании не зачитал миранду / как каффать / fib без бейджа"></textarea>
+    <section class="card" id="workSection">
+      <label class="card-label" for="input" id="inputLabel">Найти сценарий</label>
+      <p class="card-hint" id="inputHint">Выбери тему или опиши ситуацию — покажутся пошаговые инструкции.</p>
+      <textarea id="input" placeholder="как задержать / меня задержали / fib без бейджа / неприкос кортеж"></textarea>
       <div class="toolbar">
-        <label class="checkbox">
-          <input type="checkbox" id="stackWeapons" checked>
-          УК: 12.8 ч.2 + 12.8.1 при гос. оружии
-        </label>
-        <button type="button" class="primary" id="analyzeBtn">Подобрать</button>
+        <div id="ukOptions" hidden>
+          <label class="checkbox">
+            <input type="checkbox" id="stackWeapons" checked>
+            УК: 12.8 ч.2 + 12.8.1 при гос. оружии
+          </label>
+        </div>
+        <button type="button" class="primary scenarios" id="analyzeBtn">Найти</button>
       </div>
 
       <div class="filter-bar" id="catBar"></div>
-      <div class="filter-bar" id="codeBar">
+      <div class="filter-bar" id="codeBar" hidden>
         <button type="button" class="filter-btn code all active" data-code="all">Все коды</button>
         <button type="button" class="filter-btn code uk" data-code="uk">УК</button>
         <button type="button" class="filter-btn code pk" data-code="pk">ПК</button>
@@ -255,7 +267,7 @@
 
       <div class="examples" id="examples"></div>
 
-      <details class="tips">
+      <details class="tips" id="searchTips" hidden>
         <summary>Краткая шпаргалка</summary>
         <div class="tips-grid">
           <div class="tip"><strong style="color:var(--accent)">УК</strong> что сделал, ★, срок</div>
@@ -304,35 +316,52 @@
       np: { label: "НП", title: "Неприкосновенность", css: "np" },
     };
 
-    const EXAMPLES = [
+    const SCENARIO_EXAMPLES = [
+      ["Как каффать", "как задержать наручники миранда"],
+      ["Меня задержали", "меня задержали что делать права"],
+      ["Миранда", "зачитать миранду права молчание"],
+      ["Адвокат", "вызвать адвоката встреча 10 минут"],
+      ["Неприкос", "неприкосновенность кортеж usss"],
+      ["FIB бейдж", "fib без бейджа не предъявил"],
+      ["Убил копа", "убил копа скрылся 6.3"],
+      ["Ограбление", "ограбил магазин с оружием"],
+      ["Территории", "кпз fib доступ 5 минут"],
+      ["Больше часа", "держат больше часа не отпускают"],
+      ["Стадии силы", "стадии применения силы кафф"],
+      ["Жалоба", "жалоба огp прокуратура нарушили"],
+    ];
+
+    const SEARCH_EXAMPLES = [
       ["Убийство копа", "убил гос сотрудника, пытался скрыться, было гос оружие", "uk"],
-      ["Задержание", "задержал без миранды, не дал телефон, держал больше часа", "pk"],
-      ["Как каффать", "как задержать наручники миранда", "pk"],
-      ["Адвокат", "вызвать адвоката встреча 10 минут конфиденциально", "adv"],
-      ["КПЗ / FIB", "адвокат на кпз fib вызов 5 минут покинуть", "p1"],
-      ["FIB бейдж", "fib без бейджа не предъявил жетон", "fib"],
-      ["Патруль FIB", "fib одиночный патруль 4+ bodycam 72 час", "fib"],
-      ["Неприкос", "задержали губернатора кортеж usss ордер ai", "np"],
-      ["Полный кейс", "убил копа, задержал без миранды, болo 5 звезд", "uk"],
-      ["Прокурор", "прокурор нарушает процедуру что делать", "pk"],
+      ["Задержание", "задержал без миранды, не дал телефон, держал 2 часа", "pk"],
+      ["Адвокат ЗА", "гос адвокат на кпз, не пустил встретиться", "adv"],
+      ["КПЗ FIB", "зайти на fib кпз адвокат 5 минут", "p1"],
+      ["FIB патруль", "fib одиночный патруль bodycam 72 час", "fib"],
+      ["Губернатор", "задержали губернатора кортеж ai ордер", "np"],
+      ["Полный кейс", "убил копа, задержал без миранды, bolо 5 звезд", "uk"],
     ];
 
     const DOT = { uk: "var(--accent)", pk: "var(--pk)", adv: "var(--adv)", p1: "var(--p1)", fib: "var(--fib)", np: "var(--np)" };
 
-    let mode = "situations";
+    let mode = "scenarios";
     let guideCategory = "all";
     let codeFilter = "all";
 
     const input = document.getElementById("input");
     const stackWeapons = document.getElementById("stackWeapons");
+    const ukOptions = document.getElementById("ukOptions");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const result = document.getElementById("result");
     const examplesEl = document.getElementById("examples");
-    const situationsSection = document.getElementById("situationsSection");
+    const workSection = document.getElementById("workSection");
     const lawsSection = document.getElementById("lawsSection");
     const lawsViewer = document.getElementById("lawsViewer");
     const catBar = document.getElementById("catBar");
     const codeBar = document.getElementById("codeBar");
+    const inputLabel = document.getElementById("inputLabel");
+    const inputHint = document.getElementById("inputHint");
+    const searchTips = document.getElementById("searchTips");
+    const heroText = document.getElementById("heroText");
     let lawsReady = false;
 
     async function initCategories() {
@@ -363,13 +392,42 @@
         btn.classList.toggle("active", btn.dataset.mode === mode);
       });
       const isLaws = mode === "laws";
-      situationsSection.hidden = isLaws;
+      const isScenarios = mode === "scenarios";
+      const isSearch = mode === "search";
+
+      workSection.hidden = isLaws;
       lawsSection.hidden = !isLaws;
       result.hidden = isLaws;
+
+      catBar.hidden = !isScenarios;
+      codeBar.hidden = !isSearch;
+      ukOptions.hidden = !isSearch;
+      searchTips.hidden = !isSearch;
+
+      analyzeBtn.textContent = isScenarios ? "Найти сценарий" : isSearch ? "Подобрать статьи" : "OK";
+      analyzeBtn.classList.toggle("scenarios", isScenarios);
+
+      if (isScenarios) {
+        inputLabel.textContent = "Найти сценарий";
+        inputHint.textContent = "Выбери тему ниже или опиши ситуацию — пошаговая инструкция и RP-текст.";
+        input.placeholder = "как задержать / меня задержали / fib без бейджа / убил копа";
+        heroText.textContent = "Пошаговые сценарии: задержание, права, FIB, неприкос, территории и др.";
+      } else if (isSearch) {
+        inputLabel.textContent = "Подобрать статьи";
+        inputHint.textContent = "Опиши что произошло — подберутся статьи из УК, ПК, ЗА, П1, FIB, НП.";
+        input.placeholder = "убил гос сотрудника, задержал без миранды, fib оцепил улицу";
+        heroText.textContent = "Поиск статей по всем кодексам. Сверься с полным текстом во вкладке «Законы».";
+      } else {
+        heroText.textContent = "Полные тексты законов штата San-Andreas.";
+      }
+
       if (isLaws && !lawsReady) {
         window.initLawsViewer?.(lawsViewer);
         lawsReady = true;
       }
+
+      renderExamples();
+      if (!isLaws) analyze();
     }
 
     document.querySelectorAll(".main-tab").forEach((btn) => {
@@ -377,9 +435,17 @@
     });
 
     function renderExamples() {
-      examplesEl.innerHTML = EXAMPLES.map(([label, text, code]) =>
-        `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}"><span class="chip-dot" style="background:${DOT[code] || "var(--sit)"}"></span>${label}</span>`
-      ).join("");
+      if (mode === "scenarios") {
+        examplesEl.innerHTML = SCENARIO_EXAMPLES.map(([label, text]) =>
+          `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}"><span class="chip-dot" style="background:var(--scn)"></span>${label}</span>`
+        ).join("");
+      } else if (mode === "search") {
+        examplesEl.innerHTML = SEARCH_EXAMPLES.map(([label, text, code]) =>
+          `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}"><span class="chip-dot" style="background:${DOT[code] || "var(--accent)"}"></span>${label}</span>`
+        ).join("");
+      } else {
+        examplesEl.innerHTML = "";
+      }
       examplesEl.querySelectorAll(".chip").forEach((chip) => {
         chip.addEventListener("click", () => { input.value = chip.dataset.text; analyze(); });
       });
@@ -457,17 +523,29 @@
     async function analyze() {
       if (mode === "laws") return;
       const text = input.value.trim();
-      const guidesResult = await window.analyzeGuides(text, guideCategory);
-      const { sections, warnings, tags, rpText, maxStars, totalYears } = collectSections(text);
 
+      if (mode === "scenarios") {
+        const guidesResult = await window.analyzeGuides(text, guideCategory);
+        render({
+          mode: "scenarios",
+          guides: guidesResult.items || [],
+          guideWarnings: guidesResult.warnings || [],
+          sections: [],
+          rpText: guidesResult.rpText || "",
+          hasQuery: !!text,
+        });
+        return;
+      }
+
+      if (mode === "search" && !text) return;
+      const { sections, warnings, tags, rpText, maxStars, totalYears } = collectSections(text);
       render({
-        mode: "situations",
-        guides: guidesResult.items || [],
-        guideWarnings: guidesResult.warnings || [],
-        sections,
+        mode: "search",
+        guides: [],
         warnings,
+        sections,
         tags,
-        rpText: [guidesResult.rpText, rpText].filter(Boolean).join("\n\n"),
+        rpText,
         maxStars,
         totalYears,
         hasQuery: !!text,
@@ -480,8 +558,11 @@
       if (c.includes("адвокат")) return "cat-адвокат";
       if (c.includes("территор")) return "cat-территории";
       if (c.includes("неприкос")) return "cat-неприкос";
-      if (c.includes("задерж") || c.includes("кафф")) return "cat-задержание";
+      if (c.includes("преступ")) return "cat-преступления";
+      if (c.includes("задерж") || c.includes("арест") || c.includes("обыск")) return "cat-задержание";
       if (c.includes("прав")) return "cat-права";
+      if (c.includes("сила")) return "cat-сила";
+      if (c.includes("жалоб")) return "cat-жалобы";
       return "";
     }
 
@@ -529,40 +610,47 @@
 
     function render(data) {
       result.hidden = false;
+      const isScenarios = data.mode === "scenarios";
       const guideCount = data.guides?.length || 0;
       const articleCount = (data.sections || []).reduce((n, s) => n + s.articles.length, 0);
 
       const allWarnings = [...(data.guideWarnings || []), ...(data.warnings || [])];
       document.getElementById("warnings").innerHTML = [...new Set(allWarnings)].map((w) => `<div class="warn">${w}</div>`).join("");
 
-      document.getElementById("meta").innerHTML = [
-        `<div class="badge"><span class="code-sit">Сценарии:</span> <strong>${guideCount}</strong></div>`,
-        articleCount ? `<div class="badge"><span>Статьи:</span> <strong>${articleCount}</strong></div>` : "",
-        data.maxStars ? `<div class="badge uk">УК ★: <strong>${"★".repeat(data.maxStars)}</strong></div>` : "",
-        data.totalYears ? `<div class="badge uk">Срок: <strong>${data.totalYears} лет</strong></div>` : "",
-      ].filter(Boolean).join("");
+      if (isScenarios) {
+        document.getElementById("meta").innerHTML = `<div class="badge"><span style="color:var(--scn)">Сценарии:</span> <strong>${guideCount}</strong></div>`;
+      } else {
+        document.getElementById("meta").innerHTML = [
+          articleCount ? `<div class="badge"><span>Статьи:</span> <strong>${articleCount}</strong></div>` : "",
+          data.maxStars ? `<div class="badge uk">УК ★: <strong>${"★".repeat(data.maxStars)}</strong></div>` : "",
+          data.totalYears ? `<div class="badge uk">Срок: <strong>${data.totalYears} лет</strong></div>` : "",
+        ].filter(Boolean).join("") || `<div class="badge"><span style="color:var(--muted)">Введи запрос</span></div>`;
+      }
 
       let html = "";
-      if (guideCount) {
-        html += `<div class="result-block"><h3><span class="code-sit">Сценарии</span> Пошагово <span class="count">${guideCount}</span></h3>${renderGuides(data.guides)}</div>`;
-      }
-      html += renderSections(data.sections || []);
-
-      if (!html && data.hasQuery) {
-        html = `<div class="empty-state"><p>Ничего не найдено.</p><p style="font-size:0.85rem">Смени фильтр кодов или опиши подробнее.</p></div>`;
-      } else if (!html) {
-        html = `<div class="empty-state"><p>Выбери пример ниже или опиши ситуацию.</p><p style="font-size:0.85rem">Покажутся сценарии и статьи из всех кодексов.</p></div>`;
+      if (isScenarios) {
+        html = guideCount
+          ? renderGuides(data.guides)
+          : `<div class="empty-state"><p>${data.hasQuery ? "Сценарии не найдены." : "Выбери тему или пример."}</p><p style="font-size:0.85rem">Без запроса показываются популярные сценарии по выбранной теме.</p></div>`;
+      } else {
+        html = renderSections(data.sections || []);
+        if (!html && data.hasQuery) {
+          html = `<div class="empty-state"><p>Статьи не найдены.</p><p style="font-size:0.85rem">Смени фильтр кодов или опиши подробнее.</p></div>`;
+        } else if (!html) {
+          html = `<div class="empty-state"><p>Опиши ситуацию и нажми «Подобрать статьи».</p></div>`;
+        }
       }
 
       document.getElementById("tableWrap").innerHTML = html;
       document.getElementById("rpText").textContent = data.rpText || "";
       document.getElementById("rpTitle").style.display = data.rpText ? "block" : "none";
+      document.getElementById("rpTitle").textContent = isScenarios ? "Подсказка для RP" : "Текст для RP";
+      document.getElementById("rpTitle").style.color = isScenarios ? "var(--scn)" : "var(--accent)";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
     }
 
     renderExamples();
-    initCategories().then(() => analyze());
-    setMode("situations");
+    initCategories().then(() => { setMode("scenarios"); });
   </script>
 </body>
 </html>

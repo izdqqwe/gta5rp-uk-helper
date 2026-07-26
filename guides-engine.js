@@ -72,24 +72,24 @@
       })
       .sort((a, b) => b.score - a.score);
 
-    if (trimmed) {
+      if (trimmed) {
       matched = matched.filter((m) => m.score >= 1);
       if (!matched.length) {
         matched = guides
           .map((g) => ({ guide: g, score: scoreGuide(trimmed, g) }))
           .filter((m) => m.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 4);
+          .slice(0, 6);
         if (matched.length) {
           warnings.push("Точной ситуации нет — показаны близкие сценарии.");
         }
       } else {
-        matched = matched.slice(0, 6);
+        matched = matched.slice(0, 10);
       }
     } else if (category && category !== "all") {
-      matched = matched.slice(0, 12);
+      matched = matched.slice(0, 40);
     } else {
-      matched = matched.slice(0, 8);
+      matched = matched.slice(0, 20);
     }
 
     if (!matched.length) {
