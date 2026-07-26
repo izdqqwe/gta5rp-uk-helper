@@ -48,7 +48,12 @@
     if (articles.pk?.length) parts.push(`ПК: ${articles.pk.join(", ")}`);
     if (articles.adv?.length) parts.push(`ЗА: ${articles.adv.join(", ")}`);
     if (articles.p1?.length) parts.push(`П1: ${articles.p1.join(", ")}`);
-    if (articles.fib?.length) parts.push(`ФРБ: ${articles.fib.join(", ")}`);
+    if (articles.fib?.length) {
+      const law = articles.fib.filter((id) => !String(id).startsWith("U"));
+      const ustav = articles.fib.filter((id) => String(id).startsWith("U"));
+      if (law.length) parts.push(`ФРБ: ${law.join(", ")}`);
+      if (ustav.length) parts.push(`Устав FIB: ${ustav.join(", ")}`);
+    }
     if (articles.np?.length) parts.push(`НП: ${articles.np.join(", ")}`);
     return parts.join(" · ");
   }

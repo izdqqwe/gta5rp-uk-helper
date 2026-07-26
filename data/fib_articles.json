@@ -8,5 +8,10 @@
   {"id": "14.1", "article": "14", "part": 1, "title": "Применение огнестрельного оружия", "code": "FIB"},
   {"id": "15.1", "article": "15", "part": 1, "title": "Применение специальных средств", "code": "FIB"},
   {"id": "17.7", "article": "17", "part": 7, "title": "Неприкосновенность сотрудника ФРБ", "code": "FIB"},
-  {"id": "20.1", "article": "20", "part": 1, "title": "Контроль деятельности ФРБ", "code": "FIB"}
+  {"id": "20.1", "article": "20", "part": 1, "title": "Контроль деятельности ФРБ", "code": "FIB"},
+  {"id": "U2.19", "chapter": "II", "point": "2.19", "title": "Видеофиксация 72 часа", "code": "FIB-U"},
+  {"id": "U6.16", "chapter": "VI", "point": "6.16", "title": "Одиночный патруль ниже 4+", "code": "FIB-U"},
+  {"id": "U8.2", "chapter": "VIII", "point": "8.2", "title": "Бейджик / жетон", "code": "FIB-U"},
+  {"id": "U9.7", "chapter": "IX", "point": "9.7", "title": "Три выговора = строгий", "code": "FIB-U"},
+  {"id": "U9.9", "chapter": "IX", "point": "9.9", "title": "Два строгих = увольнение", "code": "FIB-U"}
 ]
