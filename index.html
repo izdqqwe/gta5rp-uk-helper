@@ -3,117 +3,200 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>УК / ПК San-Andreas Helper</title>
+  <title>San-Andreas Law Helper</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖</text></svg>">
   <style>
     :root {
-      --bg: #0f1419; --panel: #1a2332; --border: #2d3a4f; --text: #e8edf4;
-      --muted: #8b9cb3; --accent: #f5c518; --danger: #e74c3c; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43; --fib: #3498db; --np: #d4af37;
+      --bg: #0a0e14; --panel: #141c28; --panel-2: #0f1520; --border: #2a3548;
+      --text: #eef2f8; --muted: #8b9cb3;
+      --accent: #f5c518; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43;
+      --fib: #3498db; --np: #d4af37; --sit: #2ecc71; --laws: #7f8c9a;
+      --radius: 14px; --shadow: 0 8px 32px rgba(0,0,0,0.35);
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100vh; font-family: "Segoe UI", Tahoma, sans-serif;
-      background: radial-gradient(circle at top, #1b2838 0%, var(--bg) 55%); color: var(--text);
+      margin: 0; min-height: 100vh; font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,197,24,0.08), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52,152,219,0.06), transparent);
     }
-    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 48px; }
-    header h1 { margin: 0 0 8px; font-size: 1.8rem; color: var(--accent); }
-    header p { margin: 0; color: var(--muted); line-height: 1.5; }
-    .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    .mode-btn {
-      background: #243044; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 10px; padding: 8px 16px; font: inherit; cursor: pointer;
+    .wrap { max-width: 960px; margin: 0 auto; padding: 28px 18px 56px; }
+
+    .hero { text-align: center; margin-bottom: 28px; }
+    .hero h1 {
+      margin: 0 0 10px; font-size: clamp(1.6rem, 4vw, 2rem); font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), #fff8dc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .mode-btn.active { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 700; }
-    .mode-btn.active.adv { background: var(--adv); border-color: var(--adv); color: #111; font-weight: 700; }
-    .mode-btn.active.p1 { background: var(--p1); border-color: var(--p1); color: #111; font-weight: 700; }
-    .mode-btn.active.fib { background: var(--fib); border-color: var(--fib); color: #111; font-weight: 700; }
-    .mode-btn.active.np { background: var(--np); border-color: var(--np); color: #111; font-weight: 700; }
-    .mode-btn.active.guides { background: #2ecc71; border-color: #2ecc71; color: #111; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
-    label { display: block; margin-bottom: 8px; font-weight: 600; }
-    textarea {
-      width: 100%; min-height: 110px; resize: vertical; padding: 14px;
-      border-radius: 10px; border: 1px solid var(--border); background: #0d121a; color: var(--text); font: inherit;
+    .hero p { margin: 0 auto; max-width: 520px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .main-tabs {
+      display: flex; gap: 0; max-width: 360px; margin: 22px auto 0;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
+      box-shadow: var(--shadow);
     }
-    textarea:focus { outline: 2px solid rgba(245, 197, 24, 0.35); border-color: var(--accent); }
-    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
-    .checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); }
-    #ukOptions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .main-tab {
+      flex: 1; border: none; background: transparent; color: var(--muted);
+      padding: 11px 20px; border-radius: 999px; font: inherit; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .main-tab.active.situations { background: var(--sit); color: #0a1a10; }
+    .main-tab.active.laws { background: var(--laws); color: #111; }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px; margin-top: 18px; box-shadow: var(--shadow);
+    }
+    .card-label { display: block; margin-bottom: 10px; font-weight: 700; font-size: 0.95rem; }
+    .card-hint { margin: 0 0 14px; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+
+    textarea, .law-search {
+      width: 100%; padding: 14px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+      font: inherit; line-height: 1.45; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    textarea:focus, .law-search:focus {
+      outline: none; border-color: rgba(46,204,113,0.5);
+      box-shadow: 0 0 0 3px rgba(46,204,113,0.12);
+    }
+
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
     button.primary {
-      background: var(--accent); color: #111; border: none; border-radius: 10px;
-      padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer;
+      background: linear-gradient(135deg, var(--sit), #27ae60); color: #0a1a10;
+      border: none; border-radius: 12px; padding: 12px 24px; font: inherit;
+      font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(46,204,113,0.25);
+      transition: transform 0.15s;
     }
-    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button.primary:hover { transform: translateY(-1px); }
+    .checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.88rem; }
+
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .filter-btn {
+      background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 6px 13px; font-size: 0.8rem; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { color: var(--text); border-color: #445068; }
+    .filter-btn.active { color: #111; font-weight: 700; }
+    .filter-btn.cat.active { background: var(--sit); border-color: var(--sit); }
+    .filter-btn.code.active.uk { background: var(--accent); border-color: var(--accent); }
+    .filter-btn.code.active.pk { background: var(--pk); border-color: var(--pk); }
+    .filter-btn.code.active.adv { background: var(--adv); border-color: var(--adv); }
+    .filter-btn.code.active.p1 { background: var(--p1); border-color: var(--p1); }
+    .filter-btn.code.active.fib { background: var(--fib); border-color: var(--fib); }
+    .filter-btn.code.active.np { background: var(--np); border-color: var(--np); }
+    .filter-btn.code.active.all { background: #445068; border-color: #556178; color: var(--text); }
+
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .chip {
-      background: #243044; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
+      background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 7px 14px; font-size: 0.82rem; cursor: pointer;
+      transition: all 0.15s;
     }
-    .chip:hover { color: var(--text); border-color: var(--accent); }
-    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-    .badge { background: #243044; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; }
-    .badge strong { color: var(--accent); }
+    .chip:hover { color: var(--text); border-color: var(--sit); background: rgba(46,204,113,0.08); }
+    .chip-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .badge {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 14px; font-size: 0.85rem;
+    }
+    .badge strong { color: var(--sit); }
+    .badge.uk strong { color: var(--accent); }
     .badge.pk strong { color: var(--pk); }
-    .badge.adv strong { color: var(--adv); }
-    .badge.p1 strong { color: var(--p1); }
-    .badge.fib strong { color: var(--fib); }
-    .badge.np strong { color: var(--np); }
-    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    th { color: var(--muted); }
-    .stars { color: var(--danger); white-space: nowrap; }
-    .code-pk { color: var(--pk); font-size: 0.78rem; font-weight: 700; }
-    .code-adv { color: var(--adv); font-size: 0.78rem; font-weight: 700; }
-    .code-p1 { color: var(--p1); font-size: 0.78rem; font-weight: 700; }
-    .code-fib { color: var(--fib); font-size: 0.78rem; font-weight: 700; }
-    .code-np { color: var(--np); font-size: 0.78rem; font-weight: 700; }
-    .code-uk { color: var(--accent); font-size: 0.78rem; font-weight: 700; }
-    .warn { background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.35); color: #ffb4ab; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
-    .info { background: rgba(93, 173, 226, 0.1); border: 1px solid rgba(93, 173, 226, 0.3); color: #b8daf0; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
-    .rp { background: #0d121a; border: 1px dashed var(--border); border-radius: 10px; padding: 14px; white-space: pre-wrap; line-height: 1.55; }
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .tag { font-size: 0.78rem; background: #182030; border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: var(--muted); }
-    h3.section { margin: 18px 0 10px; color: var(--accent); }
-    h3.section.pk { color: var(--pk); }
-    h3.section.adv { color: var(--adv); }
-    h3.section.p1 { color: var(--p1); }
-    h3.section.fib { color: var(--fib); }
-    h3.section.np { color: var(--np); }
-    .study { font-size: 0.92rem; line-height: 1.55; color: var(--muted); }
-    .study h3 { margin: 0 0 10px; font-size: 1rem; color: var(--text); }
-    .study-grid { display: grid; gap: 12px; }
-    @media (min-width: 640px) { .study-grid { grid-template-columns: 1fr 1fr; } }
-    .study-block { background: #0d121a; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-    .study-block.uk { border-color: rgba(245, 197, 24, 0.25); }
-    .study-block.pk { border-color: rgba(93, 173, 226, 0.25); }
-    .study-block strong { color: var(--accent); }
-    .study-block.pk strong { color: var(--pk); }
-    .study ol { margin: 8px 0 0; padding-left: 1.2rem; }
-    .study li { margin-bottom: 6px; }
-    details.study-toggle summary { cursor: pointer; font-weight: 600; color: var(--text); list-style: none; }
-    details.study-toggle summary::-webkit-details-marker { display: none; }
-    .guide-card { background: #0d121a; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-    .guide-card h4 { margin: 0 0 8px; color: #2ecc71; font-size: 1.05rem; }
-    .guide-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
-    .guide-card ol { margin: 0; padding-left: 1.2rem; line-height: 1.5; }
-    .guide-card li { margin-bottom: 6px; }
-    .guide-warn { margin-top: 10px; padding: 8px 10px; background: rgba(245,197,24,0.08); border-radius: 8px; font-size: 0.88rem; color: #f5dfa0; }
-    .guide-rp { margin-top: 10px; padding: 8px 10px; background: rgba(46,204,113,0.08); border-radius: 8px; font-size: 0.88rem; color: #a8e6c3; }
-    .cat-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .cat-btn { background: #182030; border: 1px solid var(--border); color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
-    .cat-btn.active { background: #2ecc71; color: #111; border-color: #2ecc71; font-weight: 600; }
-    .mode-btn.active.laws { background: #95a5a6; border-color: #95a5a6; color: #111; font-weight: 700; }
-    #analyzeSection, #lawsSection { margin-top: 20px; }
-    .law-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
-    .law-search {
-      flex: 1; min-width: 200px; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid var(--border); background: #0d121a; color: var(--text); font: inherit;
+
+    .result-block { margin-bottom: 24px; }
+    .result-block h3 {
+      display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
+      font-size: 1rem; font-weight: 700;
     }
+    .result-block h3 .count {
+      font-size: 0.75rem; font-weight: 600; background: var(--panel-2);
+      border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; color: var(--muted);
+    }
+    .code-uk { color: var(--accent); }
+    .code-pk { color: var(--pk); }
+    .code-adv { color: var(--adv); }
+    .code-p1 { color: var(--p1); }
+    .code-fib { color: var(--fib); }
+    .code-np { color: var(--np); }
+    .code-sit { color: var(--sit); }
+
+    .guide-card {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 12px; border-left: 4px solid var(--sit);
+      transition: border-color 0.15s;
+    }
+    .guide-card.cat-fib { border-left-color: var(--fib); }
+    .guide-card.cat-адвокат, .guide-card.cat-adv { border-left-color: var(--adv); }
+    .guide-card.cat-территории { border-left-color: var(--p1); }
+    .guide-card.cat-неприкос { border-left-color: var(--np); }
+    .guide-card.cat-задержание, .guide-card.cat-права { border-left-color: var(--pk); }
+    .guide-card h4 { margin: 0 0 6px; font-size: 1.02rem; color: var(--text); }
+    .guide-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+    .guide-meta span {
+      display: inline-block; background: rgba(255,255,255,0.04); border-radius: 6px;
+      padding: 2px 8px; margin-right: 4px;
+    }
+    .guide-card ol { margin: 0; padding-left: 1.25rem; line-height: 1.55; color: #c8d4e4; }
+    .guide-card li { margin-bottom: 6px; }
+    .guide-warn {
+      margin-top: 12px; padding: 10px 12px; background: rgba(245,197,24,0.08);
+      border-radius: 8px; font-size: 0.86rem; color: #f0dfa8; border-left: 3px solid var(--accent);
+    }
+    .guide-rp {
+      margin-top: 10px; padding: 10px 12px; background: rgba(46,204,113,0.08);
+      border-radius: 8px; font-size: 0.86rem; color: #a8e6c3; font-style: italic;
+    }
+
+    .article-card {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 10px;
+    }
+    .article-card .label { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .article-card .title { color: var(--text); margin-bottom: 8px; }
+    .article-card .detail { font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+    .article-card .reason { font-size: 0.78rem; color: #6a7a92; margin-top: 8px; font-style: italic; }
+    .article-card .stars { color: #e74c3c; font-weight: 700; }
+    .smart-tag { color: var(--accent); font-size: 0.75rem; margin-left: 6px; }
+
+    .warn {
+      background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3);
+      color: #ffb4ab; border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; font-size: 0.88rem;
+    }
+    .rp {
+      background: var(--panel-2); border: 1px dashed var(--border); border-radius: 12px;
+      padding: 16px; white-space: pre-wrap; line-height: 1.55; font-size: 0.92rem; color: #c8d4e4;
+    }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      font-size: 0.75rem; background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 9px; color: var(--muted);
+    }
+
+    details.tips { margin-top: 18px; font-size: 0.88rem; color: var(--muted); }
+    details.tips summary { cursor: pointer; font-weight: 600; color: var(--text); padding: 4px 0; }
+    details.tips .tips-grid {
+      display: grid; gap: 10px; margin-top: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    details.tips .tip {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    }
+    details.tips .tip strong { display: block; margin-bottom: 4px; font-size: 0.82rem; }
+
+    /* Laws tab — keep existing good design, polish slightly */
+    .law-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
     .law-meta { font-size: 0.82rem; color: var(--muted); }
     .law-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .law-tab {
-      background: #243044; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: 7px 14px; font-size: 0.85rem; cursor: pointer;
+      background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 8px 15px; font-size: 0.85rem; cursor: pointer;
+      transition: all 0.15s;
     }
+    .law-tab:hover { color: var(--text); }
     .law-tab.active { color: #111; font-weight: 700; }
     .law-tab.uk.active { background: var(--accent); border-color: var(--accent); }
     .law-tab.pk.active { background: var(--pk); border-color: var(--pk); }
@@ -122,137 +205,85 @@
     .law-tab.fib.active { background: var(--fib); border-color: var(--fib); }
     .law-tab.np.active { background: var(--np); border-color: var(--np); }
     .law-body {
-      max-height: min(70vh, 720px); overflow: auto; background: #0d121a;
-      border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
-      line-height: 1.55; font-size: 0.92rem;
+      max-height: min(72vh, 760px); overflow: auto; background: var(--panel-2);
+      border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+      line-height: 1.58; font-size: 0.92rem;
     }
     .law-body h2.law-chapter { margin: 1.4em 0 0.6em; font-size: 1.05rem; color: var(--accent); }
     .law-body h2.law-chapter:first-child { margin-top: 0; }
-    .law-body h3.law-article { margin: 1em 0 0.35em; font-size: 0.98rem; color: var(--text); }
+    .law-body h3.law-article { margin: 1em 0 0.35em; font-size: 0.98rem; }
     .law-body p { margin: 0.35em 0; color: #c5d0de; }
     .law-body p.law-part { padding-left: 0.8rem; border-left: 2px solid var(--border); color: var(--muted); }
     .law-empty { color: var(--muted); }
+
+    .empty-state { text-align: center; padding: 28px 16px; color: var(--muted); }
+    .empty-state p { margin: 0 0 8px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
+    <header class="hero">
       <h1>San-Andreas Law Helper</h1>
-      <p>Шпаргалка-помощник, пока учишь кодексы сам. Не заменяет знание — подсказывает статьи, чтобы свериться с текстом закона.</p>
-      <div class="modes">
-        <button type="button" class="mode-btn active" data-mode="uk">УК — преступления</button>
-        <button type="button" class="mode-btn" data-mode="pk">ПК — процедура</button>
-        <button type="button" class="mode-btn" data-mode="adv">ЗА — адвокатура</button>
-        <button type="button" class="mode-btn" data-mode="p1">П1 — территории</button>
-        <button type="button" class="mode-btn" data-mode="fib">FIB — ФРБ</button>
-        <button type="button" class="mode-btn" data-mode="np">НП — неприкос</button>
-        <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
-        <button type="button" class="mode-btn" data-mode="guides">Ситуации</button>
-        <button type="button" class="mode-btn" data-mode="laws">Законы</button>
+      <p>Опиши ситуацию — получи пошаговый сценарий и статьи из всех кодексов. Сверься с полным текстом во вкладке «Законы».</p>
+      <div class="main-tabs">
+        <button type="button" class="main-tab active situations" data-mode="situations">Ситуации</button>
+        <button type="button" class="main-tab laws" data-mode="laws">Законы</button>
       </div>
-      <div class="cat-bar" id="catBar" hidden></div>
     </header>
-    <section class="card study">
-      <details class="study-toggle" open>
-        <summary>Как учить УК и ПК с этим помощником</summary>
-        <div class="study-grid" style="margin-top: 14px;">
-          <div class="study-block uk">
-            <strong>УК</strong> — <em>что</em> сделал и <em>какое наказание</em>
-            <ol>
-              <li>Убийство копа → 6.3; попытка → 17.1 (не 6.2.1)</li>
-              <li>Уход / побег → 16.12</li>
-              <li>Гос. оружие → 12.8.2 + 12.8.1 (вариант 3)</li>
-              <li>★ и срок — по таблице в ответе</li>
-            </ol>
-          </div>
-          <div class="study-block pk">
-            <strong>ПК</strong> — <em>как</em> задержать и <em>чьи права</em>
-            <ol>
-              <li>Задержание — до <strong>1 часа</strong> (ст. 15)</li>
-              <li>Порядок: наручники → удостоверение → Миранда (ст. 17)</li>
-              <li>Звонок до 3 мин, адвокат, молчание (ст. 22)</li>
-              <li>Гос. служащий → ОГП + руководство (ст. 19)</li>
-              <li>Силa: присутствие → приказ → физ. → спец. → оружие (ст. 37)</li>
-            </ol>
-          </div>
-          <div class="study-block" style="border-color: rgba(187,134,252,0.25);">
-            <strong style="color: var(--adv);">ЗА</strong> — <em>адвокат</em>, договор, встреча, запрос
-            <ol>
-              <li>Гос. адвокат — горячая линия, устный договор (ст. 8.1)</li>
-              <li>Частный — приложение «Адвокаты» (ст. 8.2)</li>
-              <li>Встреча с клиентом — до <strong>10 мин</strong> (ст. 4.2)</li>
-              <li>Гос. адвокат на КПЗ LSPD/LSCSD (ст. 4.2 п.ж)</li>
-              <li>Неприкос гос. адвоката — ордер/суд/угроза жизни (ст. 3.2)</li>
-            </ol>
-          </div>
-          <div class="study-block" style="border-color: rgba(255,159,67,0.25);">
-            <strong style="color: var(--p1);">П1</strong> — <em>территории</em>, доступ, цвета зон
-            <ol>
-              <li>Белый — прилегающие + холл; жёлтый — охраняемые; красный — особо охраняемые</li>
-              <li>Цель визита: CDWL, трудоустройство, заявление и т.д. (ст. 2)</li>
-              <li>КПЗ = клетки + допросные + коридоры</li>
-              <li>Адвокат на КПЗ — только по вызову, уйти за <strong>5 мин</strong></li>
-              <li>FIB / Форт / Кайо — особо охраняемые (красные)</li>
-            </ol>
-          </div>
-          <div class="study-block" style="border-color: rgba(52,152,219,0.25);">
-            <strong style="color: var(--fib);">FIB</strong> — <em>ФРБ</em>, устав, полномочия, неприкос
-            <ol>
-              <li>Подчинение <strong>Генпрокурору</strong> (ст. 1.2)</li>
-              <li>Обязан предъявить <strong>бейдж/жетон</strong> (ст. 4.3)</li>
-              <li>Неприкос — ордер/суд/преступление/угроза жизни (ст. 17.7)</li>
-              <li>Оцепление — мин. 2 копа на улицу (ст. 13.3)</li>
-              <li>IB — надзор за госструктурами (ст. 9.с)</li>
-            </ol>
-          </div>
-          <div class="study-block" style="border-color: rgba(212,175,55,0.25);">
-            <strong style="color: var(--np);">НП</strong> — <em>неприкосновенность</em>
-            <ol>
-              <li>Губернатор, судьи, генпрокурор, сенаторы… (ст. 2.1)</li>
-              <li>Нельзя каффать/досмотреть — кроме <strong>угрозы жизни</strong> (ст. 7.1)</li>
-              <li>Кортеж — <strong>нельзя</strong> остановить (ст. 5.3)</li>
-              <li>Расследование — ордер <strong>AI</strong> (ст. 8.1)</li>
-              <li>USSS в сопровождении = тоже неприкос (ст. 5.1)</li>
-            </ol>
-          </div>
-        </div>
-        <p style="margin: 14px 0 0;">
-          <strong style="color: var(--text);">Схема обучения:</strong>
-          опиши ситуацию → нажми «Подобрать» в режиме <strong>УК + ПК</strong> →
-          прочитай статьи → сверь с полным текстом кодекса → попробуй сам сформулировать RP без подсказки.
-        </p>
-      </details>
-    </section>
-    <section class="card" id="analyzeSection">
-      <label for="input">Что произошло?</label>
-      <textarea id="input" placeholder="убил гос сотрудника, пытался скрыться с места, было гос оружие"></textarea>
-      <div class="row">
-        <div id="ukOptions">
-          <label class="checkbox">
-            <input type="checkbox" id="stackWeapons" checked>
-            Вариант 3: 12.8 ч.2 + 12.8.1 при гос. оружии
-          </label>
-        </div>
+
+    <section class="card" id="situationsSection">
+      <label class="card-label" for="input">Что произошло?</label>
+      <textarea id="input" placeholder="убил копа и скрылся; при задержании не зачитал миранду / как каффать / fib без бейджа"></textarea>
+      <div class="toolbar">
+        <label class="checkbox">
+          <input type="checkbox" id="stackWeapons" checked>
+          УК: 12.8 ч.2 + 12.8.1 при гос. оружии
+        </label>
         <button type="button" class="primary" id="analyzeBtn">Подобрать</button>
       </div>
+
+      <div class="filter-bar" id="catBar"></div>
+      <div class="filter-bar" id="codeBar">
+        <button type="button" class="filter-btn code all active" data-code="all">Все коды</button>
+        <button type="button" class="filter-btn code uk" data-code="uk">УК</button>
+        <button type="button" class="filter-btn code pk" data-code="pk">ПК</button>
+        <button type="button" class="filter-btn code adv" data-code="adv">ЗА</button>
+        <button type="button" class="filter-btn code p1" data-code="p1">П1</button>
+        <button type="button" class="filter-btn code fib" data-code="fib">FIB</button>
+        <button type="button" class="filter-btn code np" data-code="np">НП</button>
+      </div>
+
       <div class="examples" id="examples"></div>
+
+      <details class="tips">
+        <summary>Краткая шпаргалка</summary>
+        <div class="tips-grid">
+          <div class="tip"><strong style="color:var(--accent)">УК</strong> что сделал, ★, срок</div>
+          <div class="tip"><strong style="color:var(--pk)">ПК</strong> задержание 1 ч, Миранда, права</div>
+          <div class="tip"><strong style="color:var(--adv)">ЗА</strong> встреча 10 мин, КПЗ, запрос</div>
+          <div class="tip"><strong style="color:var(--p1)">П1</strong> белый / жёлтый / красный, КПЗ</div>
+          <div class="tip"><strong style="color:var(--fib)">FIB</strong> бейдж, устав, неприкос</div>
+          <div class="tip"><strong style="color:var(--np)">НП</strong> список неприкос, кортеж, AI</div>
+        </div>
+      </details>
     </section>
+
     <section class="card" id="lawsSection" hidden>
-      <label>Полные тексты законов</label>
-      <p style="margin: 0 0 12px; color: var(--muted); font-size: 0.9rem;">
-        Тексты, которые ты присылал: УК, ПК, адвокатура, территории, FIB, устав FIB, неприкосновенность.
-      </p>
+      <label class="card-label">Полные тексты законов</label>
+      <p class="card-hint">УК, ПК, адвокатура, территории, FIB, устав FIB, неприкосновенность — как ты присылал.</p>
       <div id="lawsViewer"></div>
     </section>
+
     <section class="card" id="result" hidden>
       <div id="warnings"></div>
       <div class="meta" id="meta"></div>
       <div id="tableWrap"></div>
-      <h3 class="section" id="rpTitle">Текст для RP</h3>
+      <h3 class="result-block" id="rpTitle" style="margin-top:8px;color:var(--sit);font-size:1rem;">Текст для RP</h3>
       <div class="rp" id="rpText"></div>
       <div class="tags" id="tags"></div>
     </section>
   </div>
+
   <script src="guides-embed.js"></script>
   <script src="laws-embed.js"></script>
   <script src="laws-viewer.js"></script>
@@ -264,275 +295,274 @@
   <script src="np-engine.js"></script>
   <script src="guides-engine.js"></script>
   <script>
-    const EXAMPLES = {
-      uk: [
-        ["Убийство копа", "убил гос сотрудника, пытался скрыться с места, было гос оружие"],
-        ["Угон + сбил", "угнал машину и сбил человека"],
-        ["Разбой", "ограбил магазин с пistoletом"],
-        ["Помеха задержанию", "помеха задержанию от госа"],
-        ["Оружие + трава", "храню пistolet и 5 грамм травы"],
-      ],
-      pk: [
-        ["Задержание", "задержал без миранды, не дал телефон, держал больше часа"],
-        ["Гос + ОГП", "задержал гос сотрудника, не вызвал прокурора"],
-        ["Боло", "задержал по боло-розыску, не смотрел видео невиновности"],
-        ["Сила", "сразу стрелял без предупреждения, не соблюдал стадии силы"],
-        ["Арест", "арестовал, вторичный обыск, отправил в кпз"],
-      ],
-      adv: [
-        ["Вызов адвоката", "вызвал гос адвоката через горячую линию, устный договор"],
-        ["Встреча", "адвокат встретился 10 минут конфиденциально, коп слушал"],
-        ["Неприкос", "задержали гос адвоката без ордера"],
-        ["Запрос", "адвокатский запрос документы 24 часа state fraction"],
-        ["Частный", "частный адвокат лицензия приложение договор"],
-      ],
-      p1: [
-        ["КПЗ", "адвокат на кпз fib вызов 5 минут покинуть"],
-        ["FIB", "зайти в fib офис пропуск доступ"],
-        ["Цвета", "белая желтая красная зона прилегающая охраняемая"],
-        ["LSPD", "зайти на участок lspd cdwl цель визита"],
-        ["Форт", "доступ форт занкудo national guard пропуск"],
-      ],
-      fib: [
-        ["Неприкос", "задержали fib без ордера задержание"],
-        ["Патруль", "fib одиночный патруль 4+ опасный район"],
-        ["Видео", "fib bodycam боди кам 72 час видеофиксация"],
-        ["Выговоры", "fib три выговора строгий дисциплинарка"],
-        ["Бейдж", "fib без бейджа не предъявил жетон"],
-        ["Оружие", "fib стрелял применил оружие задержание"],
-        ["Оцепление", "fib оцепил перекрыл улицу блокировка"],
-        ["IB", "ib fib надзор lspd проверка"],
-      ],
-      np: [
-        ["Кто неприкос", "список неприкосновенных губернator судья сенator"],
-        ["Задержание", "задержали губернатора без угрозы жизни"],
-        ["Кортеж", "остановил кортеж usss досмотр"],
-        ["AI", "расследование неприкос access to investigation ордер"],
-        ["Авто", "досмотр машины неприкосновенного без согласия"],
-      ],
-      both: [
-        ["Полный кейс", "убил копа, задержал без миранды, боло 5 звезд"],
-        ["Задержание + УК", "ограбил с оружием, задержание: наручники, миранда, адвокат"],
-      ],
-      guides: [
-        ["Как каффать", "как задержать наручники миранда"],
-        ["Неприкос", "неприкосновенность досмотр usss"],
-        ["Прокурор", "прокурор нарушает процедуру что делать"],
-        ["Права", "права задержанного адвокат звонок"],
-        ["Адвокат", "вызвать адвоката встреча 10 минут конфиденциально"],
-        ["Территории", "кпз fib доступ адвокат 5 минут белая зона"],
-        ["FIB", "fib нарушил права без бейджа задержали fib"],
-        ["Сила", "стадии применения силы кафф"],
-      ],
+    const CODE_META = {
+      uk: { label: "УК", title: "Уголовный кодекс", css: "uk", stars: true },
+      pk: { label: "ПК", title: "Процессуальный кодекс", css: "pk" },
+      adv: { label: "ЗА", title: "Адвокатура", css: "adv" },
+      p1: { label: "П1", title: "Территории", css: "p1" },
+      fib: { label: "FIB", title: "ФРБ и устав", css: "fib" },
+      np: { label: "НП", title: "Неприкосновенность", css: "np" },
     };
 
-    let mode = "both";
+    const EXAMPLES = [
+      ["Убийство копа", "убил гос сотрудника, пытался скрыться, было гос оружие", "uk"],
+      ["Задержание", "задержал без миранды, не дал телефон, держал больше часа", "pk"],
+      ["Как каффать", "как задержать наручники миранда", "pk"],
+      ["Адвокат", "вызвать адвоката встреча 10 минут конфиденциально", "adv"],
+      ["КПЗ / FIB", "адвокат на кпз fib вызов 5 минут покинуть", "p1"],
+      ["FIB бейдж", "fib без бейджа не предъявил жетон", "fib"],
+      ["Патруль FIB", "fib одиночный патруль 4+ bodycam 72 час", "fib"],
+      ["Неприкос", "задержали губернатора кортеж usss ордер ai", "np"],
+      ["Полный кейс", "убил копа, задержал без миранды, болo 5 звезд", "uk"],
+      ["Прокурор", "прокурор нарушает процедуру что делать", "pk"],
+    ];
+
+    const DOT = { uk: "var(--accent)", pk: "var(--pk)", adv: "var(--adv)", p1: "var(--p1)", fib: "var(--fib)", np: "var(--np)" };
+
+    let mode = "situations";
     let guideCategory = "all";
+    let codeFilter = "all";
+
     const input = document.getElementById("input");
     const stackWeapons = document.getElementById("stackWeapons");
-    const ukOptions = document.getElementById("ukOptions");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const result = document.getElementById("result");
     const examplesEl = document.getElementById("examples");
-    const analyzeSection = document.getElementById("analyzeSection");
+    const situationsSection = document.getElementById("situationsSection");
     const lawsSection = document.getElementById("lawsSection");
     const lawsViewer = document.getElementById("lawsViewer");
     const catBar = document.getElementById("catBar");
+    const codeBar = document.getElementById("codeBar");
     let lawsReady = false;
 
     async function initCategories() {
       const cats = await window.listGuideCategories?.() || [];
-      catBar.innerHTML = [`<button type="button" class="cat-btn active" data-cat="all">Все</button>`]
-        .concat(cats.map((c) => `<button type="button" class="cat-btn" data-cat="${c}">${c}</button>`))
+      catBar.innerHTML = [`<button type="button" class="filter-btn cat active" data-cat="all">Все темы</button>`]
+        .concat(cats.map((c) => `<button type="button" class="filter-btn cat" data-cat="${c}">${c}</button>`))
         .join("");
-      catBar.querySelectorAll(".cat-btn").forEach((btn) => {
+      catBar.querySelectorAll(".filter-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           guideCategory = btn.dataset.cat;
-          catBar.querySelectorAll(".cat-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          catBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("active", b === btn));
           analyze();
         });
       });
     }
 
+    codeBar.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        codeFilter = btn.dataset.code;
+        codeBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("active", b === btn));
+        analyze();
+      });
+    });
+
     function setMode(next) {
       mode = next;
-      document.querySelectorAll(".mode-btn").forEach((btn) => {
+      document.querySelectorAll(".main-tab").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
-        btn.classList.toggle("pk", btn.dataset.mode === mode && mode === "pk");
-        btn.classList.toggle("adv", btn.dataset.mode === mode && mode === "adv");
-        btn.classList.toggle("p1", btn.dataset.mode === mode && mode === "p1");
-        btn.classList.toggle("fib", btn.dataset.mode === mode && mode === "fib");
-        btn.classList.toggle("np", btn.dataset.mode === mode && mode === "np");
-        btn.classList.toggle("guides", btn.dataset.mode === mode && mode === "guides");
-        btn.classList.toggle("laws", btn.dataset.mode === mode && mode === "laws");
       });
       const isLaws = mode === "laws";
-      analyzeSection.hidden = isLaws;
+      situationsSection.hidden = isLaws;
       lawsSection.hidden = !isLaws;
-      result.hidden = isLaws || (result.hidden && !isLaws);
-      if (isLaws) {
-        result.hidden = true;
-        if (!lawsReady) {
-          window.initLawsViewer?.(lawsViewer);
-          lawsReady = true;
-        }
-      }
-      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "fib" || mode === "np" || mode === "guides" || isLaws;
-      catBar.hidden = mode !== "guides";
-      renderExamples();
-      const placeholders = {
-        uk: "убил гос сотрудника, пытался скрыться, было гос оружие",
-        pk: "задержал без миранды, не дал телефон, держал 2 часа, не записывал на камеру",
-        adv: "гос адвокат на кпз, встреча 10 минут, не пустил адвоката, адвокатский запрос",
-        p1: "зайти на fib кпз, адвокат после вызова 5 минут, выгнали с lspd без цели",
-        fib: "fib без бейджа, одиночный патруль fib, bodycam 72 час, три выговора fib",
-        np: "задержали губернатора, кортеж usss, ордер ai, досмотр машины неприкос",
-        both: "убил копа и скрылся; при задержании не зачитал миранду, не вызвал ОГП",
-        guides: "как задержать / кафф / прокурор нарушает / неприкосновенность",
-      };
-      input.placeholder = placeholders[mode] || placeholders.guides;
-      if (mode === "guides" && !catBar.dataset.ready) {
-        initCategories().then(() => { catBar.dataset.ready = "1"; });
+      result.hidden = isLaws;
+      if (isLaws && !lawsReady) {
+        window.initLawsViewer?.(lawsViewer);
+        lawsReady = true;
       }
     }
 
+    document.querySelectorAll(".main-tab").forEach((btn) => {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
+
     function renderExamples() {
-      examplesEl.innerHTML = (EXAMPLES[mode] || EXAMPLES.uk).map(([label, text]) =>
-        `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}">${label}</span>`
+      examplesEl.innerHTML = EXAMPLES.map(([label, text, code]) =>
+        `<span class="chip" data-text="${text.replace(/"/g, "&quot;")}"><span class="chip-dot" style="background:${DOT[code] || "var(--sit)"}"></span>${label}</span>`
       ).join("");
       examplesEl.querySelectorAll(".chip").forEach((chip) => {
         chip.addEventListener("click", () => { input.value = chip.dataset.text; analyze(); });
       });
     }
 
-    document.querySelectorAll(".mode-btn").forEach((btn) => {
-      btn.addEventListener("click", () => setMode(btn.dataset.mode));
-    });
     analyzeBtn.addEventListener("click", analyze);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.ctrlKey) analyze(); });
 
-    function mergeBoth(uk, pk) {
+    function shouldRun(code) {
+      return codeFilter === "all" || codeFilter === code;
+    }
+
+    function collectSections(text) {
+      const sections = [];
+      const warnings = [];
+      const tags = new Set();
+      const rpParts = [];
+
+      if (shouldRun("uk")) {
+        const uk = window.analyzeLaw(text, stackWeapons.checked);
+        (uk.warnings || []).forEach((w) => warnings.push(w));
+        (uk.tags || []).forEach((t) => tags.add(t));
+        if (uk.rpText) rpParts.push(uk.rpText);
+        if (uk.articles?.length) sections.push({ code: "uk", data: uk, articles: uk.articles });
+      }
+      if (shouldRun("pk")) {
+        const pk = window.analyzeProcedure(text);
+        (pk.warnings || []).forEach((w) => warnings.push(w));
+        (pk.tags || []).forEach((t) => tags.add(t));
+        if (pk.rpText) rpParts.push(pk.rpText);
+        if (pk.articles?.length) sections.push({ code: "pk", data: pk, articles: pk.articles });
+      }
+      if (shouldRun("adv")) {
+        const adv = window.analyzeAdvocacy(text);
+        (adv.warnings || []).forEach((w) => warnings.push(w));
+        (adv.tags || []).forEach((t) => tags.add(t));
+        if (adv.rpText) rpParts.push(adv.rpText);
+        if (adv.articles?.length) sections.push({ code: "adv", data: adv, articles: adv.articles });
+      }
+      if (shouldRun("p1")) {
+        const p1 = window.analyzeTerritories(text);
+        (p1.warnings || []).forEach((w) => warnings.push(w));
+        (p1.tags || []).forEach((t) => tags.add(t));
+        if (p1.rpText) rpParts.push(p1.rpText);
+        if (p1.articles?.length) sections.push({ code: "p1", data: p1, articles: p1.articles });
+      }
+      if (shouldRun("fib")) {
+        const fib = window.analyzeFib(text);
+        (fib.warnings || []).forEach((w) => warnings.push(w));
+        (fib.tags || []).forEach((t) => tags.add(t));
+        if (fib.rpText) rpParts.push(fib.rpText);
+        if (fib.articles?.length) sections.push({ code: "fib", data: fib, articles: fib.articles });
+      }
+      if (shouldRun("np")) {
+        const np = window.analyzeImmunity(text);
+        (np.warnings || []).forEach((w) => warnings.push(w));
+        (np.tags || []).forEach((t) => tags.add(t));
+        if (np.rpText) rpParts.push(np.rpText);
+        if (np.articles?.length) sections.push({ code: "np", data: np, articles: np.articles });
+      }
+
+      let ukMeta = null;
+      if (shouldRun("uk") && text) ukMeta = window.analyzeLaw(text, stackWeapons.checked);
+
       return {
-        mode: "both",
-        warnings: [...(uk.warnings || []), ...(pk.warnings || [])],
-        maxStars: uk.maxStars,
-        totalYears: uk.totalYears,
-        cappedYears: uk.cappedYears,
-        tags: [...new Set([...(uk.tags || []), ...(pk.tags || [])])].sort(),
-        ukArticles: uk.articles || [],
-        pkArticles: pk.articles || [],
-        rpText: [uk.rpText, pk.rpText].filter(Boolean).join("\n\n"),
+        sections,
+        warnings: [...new Set(warnings)],
+        tags: [...tags].sort(),
+        rpText: rpParts.join("\n\n"),
+        maxStars: ukMeta?.maxStars || 0,
+        totalYears: ukMeta?.totalYears || 0,
       };
     }
 
     async function analyze() {
-      const text = input.value.trim();
       if (mode === "laws") return;
-      if (mode === "guides") {
-        render(await window.analyzeGuides(text, guideCategory));
-        return;
-      }
-      if (!text) return;
-      if (mode === "uk") render({ ...window.analyzeLaw(text, stackWeapons.checked), mode: "uk" });
-      else if (mode === "pk") render({ ...window.analyzeProcedure(text), mode: "pk" });
-      else if (mode === "adv") render({ ...window.analyzeAdvocacy(text), mode: "adv" });
-      else if (mode === "p1") render({ ...window.analyzeTerritories(text), mode: "p1" });
-      else if (mode === "fib") render({ ...window.analyzeFib(text), mode: "fib" });
-      else if (mode === "np") render({ ...window.analyzeImmunity(text), mode: "np" });
-      else render(mergeBoth(window.analyzeLaw(text, stackWeapons.checked), window.analyzeProcedure(text)));
+      const text = input.value.trim();
+      const guidesResult = await window.analyzeGuides(text, guideCategory);
+      const { sections, warnings, tags, rpText, maxStars, totalYears } = collectSections(text);
+
+      render({
+        mode: "situations",
+        guides: guidesResult.items || [],
+        guideWarnings: guidesResult.warnings || [],
+        sections,
+        warnings,
+        tags,
+        rpText: [guidesResult.rpText, rpText].filter(Boolean).join("\n\n"),
+        maxStars,
+        totalYears,
+        hasQuery: !!text,
+      });
     }
 
-    function renderGuides(data) {
-      const items = data.items || [];
-      if (!items.length) return `<p style="color:#8b9cb3">Сценарии не найдены. Выбери категорию или опиши ситуацию.</p>`;
-      return items.map((g) => `<article class="guide-card">
+    function catClass(cat) {
+      const c = (cat || "").toLowerCase();
+      if (c.includes("fib")) return "cat-fib";
+      if (c.includes("адвокат")) return "cat-адвокат";
+      if (c.includes("территор")) return "cat-территории";
+      if (c.includes("неприкос")) return "cat-неприкос";
+      if (c.includes("задерж") || c.includes("кафф")) return "cat-задержание";
+      if (c.includes("прав")) return "cat-права";
+      return "";
+    }
+
+    function renderGuides(items) {
+      if (!items.length) {
+        return `<div class="empty-state"><p>Сценарии не найдены.</p><p style="font-size:0.85rem">Попробуй другую тему или опиши ситуацию иначе.</p></div>`;
+      }
+      return items.map((g) => `<article class="guide-card ${catClass(g.category)}">
         <h4>${g.title}</h4>
-        <div class="guide-meta">${g.category} · ${g.audience}${g.articles ? " · " + g.articles : ""}${g.score ? " · score " + g.score : ""}</div>
+        <div class="guide-meta">
+          <span>${g.category}</span><span>${g.audience}</span>
+          ${g.articles ? `<span>${g.articles}</span>` : ""}
+        </div>
         <ol>${g.steps.map((s) => `<li>${s}</li>`).join("")}</ol>
         ${g.warn ? `<div class="guide-warn">${g.warn}</div>` : ""}
-        ${g.rp ? `<div class="guide-rp"><strong>RP:</strong> ${g.rp}</div>` : ""}
+        ${g.rp ? `<div class="guide-rp">${g.rp}</div>` : ""}
       </article>`).join("");
     }
 
-    function renderTable(articles, codeMode) {
-      const col3 = codeMode ? "Требование / норма" : "Розыск";
-      const col4 = codeMode ? "Примечание" : "Наказание";
-      return `<table><thead><tr>
-        <th>Статья</th><th>Суть</th><th>${col3}</th><th>${col4}</th><th>Почему</th>
-      </tr></thead><tbody>${articles.map((a) => `<tr>
-        <td>${a.label}${a.smartMatch ? ' <span style="color:#f5c518;font-size:0.8em">умный поиск</span>' : ''}</td>
-        <td>${a.title}</td>
-        <td class="${codeMode ? "" : "stars"}">${codeMode ? (a.requirement || a.punishment) : a.starsDisplay}</td>
-        <td>${codeMode ? (a.note || "—") : a.punishment}</td>
-        <td>${a.reason}</td></tr>`).join("")}</tbody></table>`;
+    function renderArticleCard(a, meta) {
+      const isUk = meta.stars;
+      const col3 = isUk ? a.starsDisplay : (a.requirement || a.punishment);
+      const col4 = isUk ? a.punishment : (a.note || "—");
+      const col3Label = isUk ? "Розыск" : "Норма";
+      const col4Label = isUk ? "Наказание" : "Примечание";
+      return `<article class="article-card">
+        <div class="label code-${meta.css}">${a.label}${a.smartMatch ? '<span class="smart-tag">умный поиск</span>' : ""}</div>
+        <div class="title">${a.title}</div>
+        <div class="detail"><strong>${col3Label}:</strong> <span class="${isUk ? "stars" : ""}">${col3}</span></div>
+        <div class="detail"><strong>${col4Label}:</strong> ${col4}</div>
+        <div class="reason">${a.reason}</div>
+      </article>`;
+    }
+
+    function renderSections(sections) {
+      if (!sections.length) return "";
+      return sections.map(({ code, articles }) => {
+        const meta = CODE_META[code];
+        return `<div class="result-block">
+          <h3><span class="code-${meta.css}">${meta.label}</span> ${meta.title} <span class="count">${articles.length}</span></h3>
+          ${articles.map((a) => renderArticleCard(a, meta)).join("")}
+        </div>`;
+      }).join("");
     }
 
     function render(data) {
       result.hidden = false;
-      const isPk = data.mode === "pk";
-      const isAdv = data.mode === "adv";
-      const isP1 = data.mode === "p1";
-      const isFib = data.mode === "fib";
-      const isNp = data.mode === "np";
-      const isBoth = data.mode === "both";
-      const isGuides = data.mode === "guides";
-      const codeMode = isPk || isAdv || isP1 || isFib || isNp;
+      const guideCount = data.guides?.length || 0;
+      const articleCount = (data.sections || []).reduce((n, s) => n + s.articles.length, 0);
 
-      document.getElementById("warnings").innerHTML = (data.warnings || []).map((w) =>
-        `<div class="warn">${w}</div>`
-      ).join("");
+      const allWarnings = [...(data.guideWarnings || []), ...(data.warnings || [])];
+      document.getElementById("warnings").innerHTML = [...new Set(allWarnings)].map((w) => `<div class="warn">${w}</div>`).join("");
 
-      const meta = document.getElementById("meta");
-      if (isGuides) {
-        meta.innerHTML = `<div class="badge" style="border-color:#2ecc71"><span style="color:#2ecc71">Ситуации:</span> <strong>${data.items?.length || 0}</strong> сценариев</div>`;
-      } else if (isAdv) {
-        meta.innerHTML = `<div class="badge adv">Режим: <strong>ЗА</strong> — адвокатура, договор, встреча, запрос</div>`;
-      } else if (isP1) {
-        meta.innerHTML = `<div class="badge p1">Режим: <strong>П1</strong> — закрытые/охраняемые территории</div>`;
-      } else if (isFib) {
-        meta.innerHTML = `<div class="badge fib">Режим: <strong>FIB</strong> — ФРБ, устав, полномочия, неприкос</div>`;
-      } else if (isNp) {
-        meta.innerHTML = `<div class="badge np">Режим: <strong>НП</strong> — неприкосновенность гос. лиц</div>`;
-      } else if (isPk) {
-        meta.innerHTML = `<div class="badge pk">Режим: <strong>ПК</strong> — процедура, права, задержание (до 1 ч.)</div>`;
-      } else if (isBoth) {
-        meta.innerHTML = `
-          <div class="badge">УК — розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
-          <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
-          <div class="badge pk">ПК — статей: <strong>${data.pkArticles.length}</strong></div>`;
-      } else {
-        meta.innerHTML = `
-          <div class="badge">Розыск: <strong>${"★".repeat(data.maxStars || 0) || "—"}</strong></div>
-          <div class="badge">Сумма сроков: <strong>${data.totalYears || 0} лет</strong></div>
-          <div class="badge">Лимит: <strong>${data.cappedYears || 0} лет</strong></div>`;
+      document.getElementById("meta").innerHTML = [
+        `<div class="badge"><span class="code-sit">Сценарии:</span> <strong>${guideCount}</strong></div>`,
+        articleCount ? `<div class="badge"><span>Статьи:</span> <strong>${articleCount}</strong></div>` : "",
+        data.maxStars ? `<div class="badge uk">УК ★: <strong>${"★".repeat(data.maxStars)}</strong></div>` : "",
+        data.totalYears ? `<div class="badge uk">Срок: <strong>${data.totalYears} лет</strong></div>` : "",
+      ].filter(Boolean).join("");
+
+      let html = "";
+      if (guideCount) {
+        html += `<div class="result-block"><h3><span class="code-sit">Сценарии</span> Пошагово <span class="count">${guideCount}</span></h3>${renderGuides(data.guides)}</div>`;
+      }
+      html += renderSections(data.sections || []);
+
+      if (!html && data.hasQuery) {
+        html = `<div class="empty-state"><p>Ничего не найдено.</p><p style="font-size:0.85rem">Смени фильтр кодов или опиши подробнее.</p></div>`;
+      } else if (!html) {
+        html = `<div class="empty-state"><p>Выбери пример ниже или опиши ситуацию.</p><p style="font-size:0.85rem">Покажутся сценарии и статьи из всех кодексов.</p></div>`;
       }
 
-      const tableWrap = document.getElementById("tableWrap");
-      if (isGuides) {
-        tableWrap.innerHTML = renderGuides(data);
-      } else if (isBoth) {
-        let html = "";
-        if (data.ukArticles.length) {
-          html += `<h3 class="section"><span class="code-uk">УК</span> Уголовный кодекс</h3>${renderTable(data.ukArticles, false)}`;
-        }
-        if (data.pkArticles.length) {
-          html += `<h3 class="section pk"><span class="code-pk">ПК</span> Процессуальный кодекс</h3>${renderTable(data.pkArticles, true)}`;
-        }
-        if (!html) html = `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
-        tableWrap.innerHTML = html;
-      } else {
-        const arts = data.articles || [];
-        tableWrap.innerHTML = arts.length ? renderTable(arts, codeMode) : `<p style="color:#8b9cb3">Статьи не найдены.</p>`;
-      }
-
-      document.getElementById("rpTitle").className = isGuides ? "section" : isNp ? "section np" : isFib ? "section fib" : isP1 ? "section p1" : isAdv ? "section adv" : isPk ? "section pk" : "section";
-      document.getElementById("rpTitle").textContent = isGuides ? "Подсказка для RP" : "Текст для RP";
+      document.getElementById("tableWrap").innerHTML = html;
       document.getElementById("rpText").textContent = data.rpText || "";
+      document.getElementById("rpTitle").style.display = data.rpText ? "block" : "none";
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
     }
 
-    setMode("both");
-    analyze();
+    renderExamples();
+    initCategories().then(() => analyze());
+    setMode("situations");
   </script>
 </body>
 </html>
