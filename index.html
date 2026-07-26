@@ -101,6 +101,37 @@
     .cat-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .cat-btn { background: #182030; border: 1px solid var(--border); color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
     .cat-btn.active { background: #2ecc71; color: #111; border-color: #2ecc71; font-weight: 600; }
+    .mode-btn.active.laws { background: #95a5a6; border-color: #95a5a6; color: #111; font-weight: 700; }
+    #analyzeSection, #lawsSection { margin-top: 20px; }
+    .law-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .law-search {
+      flex: 1; min-width: 200px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: #0d121a; color: var(--text); font: inherit;
+    }
+    .law-meta { font-size: 0.82rem; color: var(--muted); }
+    .law-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .law-tab {
+      background: #243044; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 999px; padding: 7px 14px; font-size: 0.85rem; cursor: pointer;
+    }
+    .law-tab.active { color: #111; font-weight: 700; }
+    .law-tab.uk.active { background: var(--accent); border-color: var(--accent); }
+    .law-tab.pk.active { background: var(--pk); border-color: var(--pk); }
+    .law-tab.adv.active { background: var(--adv); border-color: var(--adv); }
+    .law-tab.p1.active { background: var(--p1); border-color: var(--p1); }
+    .law-tab.fib.active { background: var(--fib); border-color: var(--fib); }
+    .law-tab.np.active { background: var(--np); border-color: var(--np); }
+    .law-body {
+      max-height: min(70vh, 720px); overflow: auto; background: #0d121a;
+      border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+      line-height: 1.55; font-size: 0.92rem;
+    }
+    .law-body h2.law-chapter { margin: 1.4em 0 0.6em; font-size: 1.05rem; color: var(--accent); }
+    .law-body h2.law-chapter:first-child { margin-top: 0; }
+    .law-body h3.law-article { margin: 1em 0 0.35em; font-size: 0.98rem; color: var(--text); }
+    .law-body p { margin: 0.35em 0; color: #c5d0de; }
+    .law-body p.law-part { padding-left: 0.8rem; border-left: 2px solid var(--border); color: var(--muted); }
+    .law-empty { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -117,6 +148,7 @@
         <button type="button" class="mode-btn" data-mode="np">НП — неприкос</button>
         <button type="button" class="mode-btn" data-mode="both">УК + ПК</button>
         <button type="button" class="mode-btn" data-mode="guides">Ситуации</button>
+        <button type="button" class="mode-btn" data-mode="laws">Законы</button>
       </div>
       <div class="cat-bar" id="catBar" hidden></div>
     </header>
@@ -191,7 +223,7 @@
         </p>
       </details>
     </section>
-    <section class="card">
+    <section class="card" id="analyzeSection">
       <label for="input">Что произошло?</label>
       <textarea id="input" placeholder="убил гос сотрудника, пытался скрыться с места, было гос оружие"></textarea>
       <div class="row">
@@ -205,6 +237,13 @@
       </div>
       <div class="examples" id="examples"></div>
     </section>
+    <section class="card" id="lawsSection" hidden>
+      <label>Полные тексты законов</label>
+      <p style="margin: 0 0 12px; color: var(--muted); font-size: 0.9rem;">
+        Тексты, которые ты присылал: УК, ПК, адвокатура, территории, FIB, устав FIB, неприкосновенность.
+      </p>
+      <div id="lawsViewer"></div>
+    </section>
     <section class="card" id="result" hidden>
       <div id="warnings"></div>
       <div class="meta" id="meta"></div>
@@ -215,6 +254,8 @@
     </section>
   </div>
   <script src="guides-embed.js"></script>
+  <script src="laws-embed.js"></script>
+  <script src="laws-viewer.js"></script>
   <script src="law-engine.js"></script>
   <script src="pk-engine.js"></script>
   <script src="adv-engine.js"></script>
@@ -293,7 +334,11 @@
     const analyzeBtn = document.getElementById("analyzeBtn");
     const result = document.getElementById("result");
     const examplesEl = document.getElementById("examples");
+    const analyzeSection = document.getElementById("analyzeSection");
+    const lawsSection = document.getElementById("lawsSection");
+    const lawsViewer = document.getElementById("lawsViewer");
     const catBar = document.getElementById("catBar");
+    let lawsReady = false;
 
     async function initCategories() {
       const cats = await window.listGuideCategories?.() || [];
@@ -319,8 +364,20 @@
         btn.classList.toggle("fib", btn.dataset.mode === mode && mode === "fib");
         btn.classList.toggle("np", btn.dataset.mode === mode && mode === "np");
         btn.classList.toggle("guides", btn.dataset.mode === mode && mode === "guides");
+        btn.classList.toggle("laws", btn.dataset.mode === mode && mode === "laws");
       });
-      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "fib" || mode === "np" || mode === "guides";
+      const isLaws = mode === "laws";
+      analyzeSection.hidden = isLaws;
+      lawsSection.hidden = !isLaws;
+      result.hidden = isLaws || (result.hidden && !isLaws);
+      if (isLaws) {
+        result.hidden = true;
+        if (!lawsReady) {
+          window.initLawsViewer?.(lawsViewer);
+          lawsReady = true;
+        }
+      }
+      ukOptions.hidden = mode === "pk" || mode === "adv" || mode === "p1" || mode === "fib" || mode === "np" || mode === "guides" || isLaws;
       catBar.hidden = mode !== "guides";
       renderExamples();
       const placeholders = {
@@ -370,6 +427,7 @@
 
     async function analyze() {
       const text = input.value.trim();
+      if (mode === "laws") return;
       if (mode === "guides") {
         render(await window.analyzeGuides(text, guideCategory));
         return;
