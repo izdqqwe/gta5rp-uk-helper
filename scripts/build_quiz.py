@@ -1,9 +1,13 @@
 """Build quiz.json and quiz-embed.js for GTA5 RP San-Andreas law helper."""
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from uk_quiz_generator import generate_uk_questions
+
 OUT_JSON = ROOT / "data" / "quiz.json"
 OUT_JS = ROOT / "quiz-embed.js"
 
@@ -411,11 +415,25 @@ QUIZ = [
 ]
 
 
-def validate():
-    if len(QUIZ) < 120:
-        raise SystemExit(f"need >= 120 questions, got {len(QUIZ)}")
+def build_full_quiz():
+    manual_uk = [item for item in QUIZ if item["code"] == "uk"]
+    other = [item for item in QUIZ if item["code"] != "uk"]
+    auto_uk = generate_uk_questions()
+    manual_refs = {item["ref"] for item in manual_uk}
+    # Keep handcrafted UK; skip auto duplicates on same ref+question type
+    auto_filtered = []
+    for item in auto_uk:
+        if item["ref"] in manual_refs and ("-stars" in item["id"] or "-pun" in item["id"]):
+            continue
+        auto_filtered.append(item)
+    return manual_uk + auto_filtered + other
+
+
+def validate(quiz):
+    if len(quiz) < 120:
+        raise SystemExit(f"need >= 120 questions, got {len(quiz)}")
     seen = set()
-    for item in QUIZ:
+    for item in quiz:
         if item["id"] in seen:
             raise SystemExit(f"duplicate id: {item['id']}")
         seen.add(item["id"])
@@ -429,18 +447,21 @@ def validate():
 
 
 def main():
-    validate()
+    full = build_full_quiz()
+    validate(full)
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    OUT_JSON.write_text(json.dumps(QUIZ, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    OUT_JSON.write_text(json.dumps(full, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     OUT_JS.write_text(
-        "window.QUIZ_EMBEDDED = " + json.dumps(QUIZ, ensure_ascii=False, indent=2) + ";\n",
+        "window.QUIZ_EMBEDDED = " + json.dumps(full, ensure_ascii=False, indent=2) + ";\n",
         encoding="utf-8",
     )
-    counts = Counter(item["code"] for item in QUIZ)
-    print(f"wrote {len(QUIZ)} questions -> {OUT_JSON.name}, {OUT_JS.name}")
+    counts = Counter(item["code"] for item in full)
+    uk_refs = len({item["ref"] for item in full if item["code"] == "uk"})
+    print(f"wrote {len(full)} questions -> {OUT_JSON.name}, {OUT_JS.name}")
     for code in sorted(counts):
         print(f"  {code}: {counts[code]}")
-    print(f"  total: {len(QUIZ)}")
+    print(f"  uk unique refs: {uk_refs}")
+    print(f"  total: {len(full)}")
 
 
 if __name__ == "__main__":

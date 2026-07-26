@@ -102,7 +102,7 @@
 
       root.innerHTML = `
         <div class="quiz-setup">
-          <p class="card-hint">${total} вопросов по УК, ПК, ЗА, П1, FIB, уставу и неприкосновенности. После ответа — разбор и ссылка на статью.</p>
+          <p class="card-hint">${total} вопросов. <strong>УК — по каждой статье</strong> (звёзды, наказание, состав). Остальные кодексы — ключевые нормы. После ответа — разбор.</p>
           <div class="quiz-stats">
             <div class="quiz-stat"><strong>${total}</strong><span>всего</span></div>
             <div class="quiz-stat"><strong>${wrongCount}</strong><span>на повтор</span></div>
