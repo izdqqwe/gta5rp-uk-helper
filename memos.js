@@ -49,25 +49,28 @@
     }
   }
 
-  function applyHighlightsToHtml(html, highlights) {
-    if (!highlights?.length) return html;
-    let out = html;
+  const HL_S = "\uE000";
+  const HL_E = "\uE001";
+
+  function injectHighlights(text, highlights) {
+    if (!highlights?.length) return text;
+    let t = text;
     const uniq = [...new Set(highlights.map((h) => h.replace(/\s+/g, " ").trim()))]
       .filter((h) => h.length >= 2)
       .sort((a, b) => b.length - a.length);
-    for (const h of uniq) {
-      const e = esc(h);
-      if (out.includes(e)) out = out.split(e).join(`<mark class="memo-hl">${e}</mark>`);
+    for (const phrase of uniq) {
+      const re = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      t = t.replace(re, (match) => `${HL_S}${match}${HL_E}`);
     }
-    return out;
+    return t;
   }
 
   function formatMemoHtml(raw, highlights) {
-    const text = String(raw || "").replace(/\s+/g, " ").trim();
+    let text = String(raw || "").replace(/\s+/g, " ").trim();
     if (!text) return "";
+    text = injectHighlights(text, highlights);
     const blocks = splitLawBlocks(text);
-    const html = `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
-    return applyHighlightsToHtml(html, highlights);
+    return `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
   }
 
   function splitLawBlocks(text) {
@@ -138,6 +141,30 @@
   }
 
   function formatInline(text) {
+    if (text.includes(HL_S)) {
+      let out = "";
+      let i = 0;
+      while (i < text.length) {
+        const start = text.indexOf(HL_S, i);
+        if (start === -1) {
+          out += formatInlinePlain(text.slice(i));
+          break;
+        }
+        out += formatInlinePlain(text.slice(i, start));
+        const end = text.indexOf(HL_E, start);
+        if (end === -1) {
+          out += formatInlinePlain(text.slice(start));
+          break;
+        }
+        out += `<span class="memo-hl">${formatInlinePlain(text.slice(start + 1, end))}</span>`;
+        i = end + 1;
+      }
+      return out;
+    }
+    return formatInlinePlain(text);
+  }
+
+  function formatInlinePlain(text) {
     let s = esc(text);
     s = s.replace(/(★+)/g, "<span class=\"memo-stars\">$1</span>");
     s = s.replace(/^(ч\.\s*\d+)/i, "<span class=\"memo-kw\">$1</span>");
@@ -414,6 +441,30 @@
   }
 
   window.initMemosViewer = function initMemosViewer(root) {
+    function startEdit(row, memo, filter) {
+      const cell = row.querySelector(".memo-text-cell");
+      cell.innerHTML = `
+        <textarea class="memo-edit-area">${esc(memo.text)}</textarea>
+        <p class="memo-edit-tip">Правь текст → Сохранить. Выделения жёлтым сохраняются отдельно.</p>
+        <div class="memo-edit-bar">
+          <button type="button" class="memo-save primary quiz-start">Сохранить</button>
+          <button type="button" class="memo-cancel memo-back-btn">Отмена</button>
+        </div>`;
+      cell.querySelector(".memo-save")?.addEventListener("click", () => {
+        const val = cell.querySelector(".memo-edit-area")?.value?.replace(/\s+/g, " ")?.trim();
+        if (val && val.length >= MIN_LEN) {
+          updateMemo(memo.id, {
+            text: val,
+            highlights: (memo.highlights || []).filter((h) => val.toLowerCase().includes(h.toLowerCase())),
+          });
+          flashToast("Сохранено");
+        }
+        render(filter);
+      });
+      cell.querySelector(".memo-cancel")?.addEventListener("click", () => render(filter));
+      cell.querySelector(".memo-edit-area")?.focus();
+    }
+
     function render(filter = "") {
       const q = filter.trim().toLowerCase().replace(/ё/g, "e");
       let list = sortedMemos(loadMemos());
@@ -427,7 +478,7 @@
       root.innerHTML = `
         <div class="memo-toolbar">
           <input type="search" class="law-search memo-search" placeholder="Поиск по памяткам…" value="${esc(filter)}" />
-          <span class="memo-count">${list.length} записей · выдели текст → «Выделить жёлтым» · ✏️ редактировать</span>
+          <span class="memo-count">${list.length} записей · выдели текст → «Выделить жёлтым» · двойной клик — редактировать</span>
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
@@ -458,7 +509,9 @@
                   <td class="memo-date">${esc(formatDate(m.created))}</td>
                   <td class="memo-from">${esc(src.from)}</td>
                   <td class="memo-ref-col">${refCol}</td>
-                  <td class="memo-text-cell">${formatMemoHtml(m.text, m.highlights)}</td>
+                  <td class="memo-text-cell" title="Выдели текст → «Выделить жёлтым». Двойной клик — редактировать.">
+                    ${formatMemoHtml(m.text, m.highlights)}
+                  </td>
                   <td class="memo-actions">
                     <button type="button" class="memo-edit" title="Редактировать">✏️</button>
                     <button type="button" class="memo-unhl" title="Сбросить выделения">🖍</button>
@@ -489,23 +542,16 @@
           const row = btn.closest("tr");
           const memo = loadMemos().find((m) => m.id === row?.dataset.id);
           if (!row || !memo) return;
-          const cell = row.querySelector(".memo-text-cell");
-          cell.innerHTML = `
-            <textarea class="memo-edit-area">${esc(memo.text)}</textarea>
-            <div class="memo-edit-bar">
-              <button type="button" class="memo-save primary quiz-start">Сохранить</button>
-              <button type="button" class="memo-cancel memo-back-btn">Отмена</button>
-            </div>`;
-          cell.querySelector(".memo-save")?.addEventListener("click", () => {
-            const val = cell.querySelector(".memo-edit-area")?.value?.replace(/\s+/g, " ")?.trim();
-            if (val && val.length >= MIN_LEN) {
-              updateMemo(memo.id, { text: val, highlights: (memo.highlights || []).filter((h) => val.includes(h)) });
-              flashToast("Сохранено");
-            }
-            render(filter);
-          });
-          cell.querySelector(".memo-cancel")?.addEventListener("click", () => render(filter));
-          cell.querySelector(".memo-edit-area")?.focus();
+          startEdit(row, memo, filter);
+        });
+      });
+
+      root.querySelectorAll(".memo-text-cell").forEach((cell) => {
+        cell.addEventListener("dblclick", (e) => {
+          if (e.target.closest("button, textarea")) return;
+          const row = cell.closest("tr");
+          const memo = loadMemos().find((m) => m.id === row?.dataset.id);
+          if (row && memo && !cell.querySelector(".memo-edit-area")) startEdit(row, memo, filter);
         });
       });
 

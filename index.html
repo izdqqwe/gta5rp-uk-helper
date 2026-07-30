@@ -356,15 +356,16 @@
     .memo-table th:nth-child(2), .memo-table td.memo-from { white-space: nowrap; }
     .memo-table th:nth-child(3), .memo-table td.memo-ref-col { white-space: nowrap; }
     .memo-table th:nth-child(5), .memo-table td.memo-actions { white-space: nowrap; }
-    .memo-text-cell { word-wrap: break-word; overflow-wrap: anywhere; }
+    .memo-text-cell { word-wrap: break-word; overflow-wrap: anywhere; cursor: text; }
     .memo-date { color: var(--muted); font-size: 0.78rem; }
     .memo-from { color: var(--muted); font-size: 0.78rem; }
     .memo-ref-col { font-weight: 700; color: var(--accent); font-size: 0.78rem; }
     .memo-text-cell .memo-law-body { font-size: 0.9rem; width: 100%; }
-    .memo-hl {
-      background: rgba(245,197,24,0.55); color: #fff;
-      padding: 1px 3px; border-radius: 3px; box-decoration-break: clone;
+    .memo-hl, mark.memo-hl {
+      background: none; color: var(--accent); font-weight: 700;
+      padding: 0; border-radius: 0;
     }
+    .memo-edit-tip { margin: 8px 0 0; font-size: 0.78rem; color: var(--muted); }
     .memo-edit-area {
       width: 100%; min-height: 140px; padding: 12px; border-radius: 10px;
       border: 1px solid var(--border); background: var(--panel); color: var(--text);
