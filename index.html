@@ -341,7 +341,7 @@
     .memo-col-from { width: 64px; }
     .memo-col-ref { width: 48px; }
     .memo-col-text { width: auto; }
-    .memo-col-act { width: 48px; }
+    .memo-col-act { width: 56px; }
     .memo-table th {
       position: sticky; top: 0; z-index: 1; background: var(--panel);
       text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -357,6 +357,17 @@
     .memo-table th:nth-child(3), .memo-table td.memo-ref-col { white-space: nowrap; }
     .memo-table th:nth-child(5), .memo-table td.memo-actions { white-space: nowrap; }
     .memo-text-cell { word-wrap: break-word; overflow-wrap: anywhere; cursor: text; }
+    .memo-cell-bar {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+    .memo-edit-link {
+      background: rgba(245,197,24,0.15); border: 1px solid var(--accent); color: var(--accent);
+      border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    }
+    .memo-edit-link:hover { background: rgba(245,197,24,0.28); }
+    .memo-cell-bar-hint { font-size: 0.72rem; color: var(--muted); }
+    .memo-cell-editor { margin-top: 4px; }
     .memo-date { color: var(--muted); font-size: 0.78rem; }
     .memo-from { color: var(--muted); font-size: 0.78rem; }
     .memo-ref-col { font-weight: 700; color: var(--accent); font-size: 0.78rem; }
@@ -376,8 +387,9 @@
     .memo-actions button { display: block; width: 100%; margin-bottom: 4px; }
     .memo-actions button:last-child { margin-bottom: 0; }
     .memo-edit, .memo-unhl, .memo-copy, .memo-del {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-      padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 3px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 600; color: var(--muted);
+      width: 100%;
     }
     .memo-copy:hover { border-color: var(--memo); }
     .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
