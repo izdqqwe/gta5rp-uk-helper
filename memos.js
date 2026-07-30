@@ -5,6 +5,7 @@
   let floatingEl = null;
   let pendingText = "";
   let pendingHl = null;
+  let lastMemoHl = null;
   let getMode = () => "app";
   let getContext = () => "";
   let memoRender = null;
@@ -326,6 +327,7 @@
     if (getMode() === "memos" && memoCell) {
       const row = memoCell.closest("tr");
       pendingHl = { id: row?.dataset.id, text };
+      lastMemoHl = pendingHl;
       pendingText = "";
       showFloating(rect, "hl");
       return;
@@ -440,33 +442,30 @@
     return { from: parts[0] || "—", tag: parts.slice(1).join(" · ") || "—" };
   }
 
-  const MEMO_ICONS = {
-    edit: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    hl: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 2.5c.8-.8 2.1-.8 2.9 0l1.1 1.1c.8.8.8 2.1 0 2.9L9.8 18.2l-4 1 1-4L17.5 2.5zM3 20h18v2H3v-2z"/></svg>`,
-    copy: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`,
-    del: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
-  };
-
-  function memoIconBtn(cls, title, icon) {
-    return `<button type="button" class="memo-icon-btn ${cls}" title="${esc(title)}" aria-label="${esc(title)}">${icon}</button>`;
-  }
-
   function getSelectionText() {
     return (window.getSelection()?.toString() || "").replace(/\s+/g, " ").trim();
   }
 
   function highlightFromSelection(rowId) {
-    const text = getSelectionText();
+    let text = getSelectionText();
+    if (text.length < MIN_LEN && lastMemoHl?.id === rowId) text = lastMemoHl.text;
     if (text.length < MIN_LEN) return false;
     addMemoHighlight(rowId, text);
+    lastMemoHl = null;
     return true;
+  }
+
+  function memoActionBtn(cls, title) {
+    return `<button type="button" class="memo-ib ${cls}" title="${esc(title)}" aria-label="${esc(title)}"></button>`;
   }
 
   window.initMemosViewer = function initMemosViewer(root) {
     let editingId = null;
+    let editingFilter = "";
 
     function startEdit(row, memo, filter) {
       editingId = memo.id;
+      editingFilter = filter;
       const cell = row.querySelector(".memo-text-cell");
       const content = cell.querySelector(".memo-cell-content");
       if (content) content.hidden = true;
@@ -489,16 +488,35 @@
       editor.appendChild(tip);
       const editBar = document.createElement("div");
       editBar.className = "memo-edit-bar";
-      editBar.innerHTML = `
-        <button type="button" class="memo-save primary quiz-start">Сохранить</button>
-        <button type="button" class="memo-cancel memo-back-btn">Отмена</button>`;
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.className = "memo-save-btn primary";
+      saveBtn.textContent = "Сохранить";
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "memo-cancel-btn memo-back-btn";
+      cancelBtn.textContent = "Отмена";
+      editBar.append(saveBtn, cancelBtn);
       editor.appendChild(editBar);
+
+      saveBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (saveEdit(memo.id, ta)) flashToast("Сохранено");
+        editingId = null;
+        render(editingFilter);
+      });
+      cancelBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editingId = null;
+        render(editingFilter);
+      });
+
       ta.focus();
     }
 
-    function saveEdit(row) {
-      const id = row?.dataset?.id;
-      const ta = row?.querySelector(".memo-edit-area");
+    function saveEdit(id, ta) {
       if (!id || !ta) return false;
       const val = ta.value.replace(/\r\n/g, "\n").trim();
       if (val.length < MIN_LEN) {
@@ -514,10 +532,6 @@
       return true;
     }
 
-    function cancelEdit() {
-      editingId = null;
-    }
-
     function render(filter = "") {
       const q = filter.trim().toLowerCase().replace(/ё/g, "e");
       let list = sortedMemos(loadMemos());
@@ -531,7 +545,7 @@
       root.innerHTML = `
         <div class="memo-toolbar">
           <input type="search" class="law-search memo-search" placeholder="Поиск по памяткам…" value="${esc(filter)}" />
-          <span class="memo-count">${list.length} записей · выдели текст → 🖍 или кнопка маркера · двойной клик — редактировать</span>
+          <span class="memo-count">${list.length} записей · выдели текст → маркер · двойной клик — редактировать</span>
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
@@ -566,10 +580,10 @@
                     <div class="memo-cell-content">${formatMemoHtml(m.text, m.highlights)}</div>
                   </td>
                   <td class="memo-actions">
-                    ${memoIconBtn("memo-edit", "Редактировать", MEMO_ICONS.edit)}
-                    ${memoIconBtn("memo-hl-action", "Выделить жёлтым", MEMO_ICONS.hl)}
-                    ${memoIconBtn("memo-copy", "Копировать", MEMO_ICONS.copy)}
-                    ${memoIconBtn("memo-del", "Удалить", MEMO_ICONS.del)}
+                    ${memoActionBtn("memo-ib-edit", "Редактировать")}
+                    ${memoActionBtn("memo-ib-hl", "Выделить жёлтым")}
+                    ${memoActionBtn("memo-ib-copy", "Копировать")}
+                    ${memoActionBtn("memo-ib-del", "Удалить")}
                   </td>
                 </tr>`;
               }).join("")}
@@ -594,13 +608,13 @@
         root.dataset.memoClickBound = "1";
 
         root.addEventListener("mousedown", (e) => {
-          if (e.target.closest(".memo-hl-action, #memoHlBtn")) e.preventDefault();
+          if (e.target.closest(".memo-ib-hl, #memoHlBtn")) e.preventDefault();
         });
 
         root.addEventListener("click", (e) => {
           const filterVal = root.querySelector(".memo-search")?.value || "";
 
-          const editBtn = e.target.closest(".memo-edit");
+          const editBtn = e.target.closest(".memo-ib-edit");
           if (editBtn) {
             const row = editBtn.closest("tr");
             const memo = loadMemos().find((m) => m.id === row?.dataset.id);
@@ -608,24 +622,7 @@
             return;
           }
 
-          const saveBtn = e.target.closest(".memo-save");
-          if (saveBtn) {
-            e.preventDefault();
-            const row = saveBtn.closest("tr");
-            if (row && saveEdit(row)) flashToast("Сохранено");
-            editingId = null;
-            render(filterVal);
-            return;
-          }
-
-          const cancelBtn = e.target.closest(".memo-cancel");
-          if (cancelBtn) {
-            editingId = null;
-            render(filterVal);
-            return;
-          }
-
-          const hlBtn = e.target.closest(".memo-hl-action");
+          const hlBtn = e.target.closest(".memo-ib-hl");
           if (hlBtn) {
             const row = hlBtn.closest("tr");
             if (row && highlightFromSelection(row.dataset.id)) {
@@ -638,7 +635,7 @@
             return;
           }
 
-          const delBtn = e.target.closest(".memo-del");
+          const delBtn = e.target.closest(".memo-ib-del");
           if (delBtn) {
             const row = delBtn.closest("tr");
             if (row) deleteLawMemo(row.dataset.id);
@@ -646,7 +643,7 @@
             return;
           }
 
-          const copyBtn = e.target.closest(".memo-copy");
+          const copyBtn = e.target.closest(".memo-ib-copy");
           if (copyBtn) {
             const memo = loadMemos().find((m) => m.id === copyBtn.closest("tr")?.dataset.id);
             if (memo) {
