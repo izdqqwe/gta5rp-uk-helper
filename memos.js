@@ -47,61 +47,98 @@
     }
   }
 
-  /** Разбить текст закона на статьи и пункты ч.N */
+  /** Форматирование как во вкладке «Законы»: статьи, ч.N, подпункты, ключевые слова */
   function formatMemoHtml(raw) {
     const text = String(raw || "").replace(/\s+/g, " ").trim();
     if (!text) return "";
 
-    const articles = text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
-    if (articles.length > 1 || /^Статья\s+\d/i.test(text)) {
-      return articles.map(formatArticleBlock).join("");
+    const blocks = splitLawBlocks(text);
+    return `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
+  }
+
+  function splitLawBlocks(text) {
+    const chunks = text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
+    if (chunks.length) return chunks;
+    if (/^(ГЛАВА|РАЗДЕЛ|Глава)/i.test(text)) {
+      return text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
     }
-    return formatPlainBlock(text);
+    return [text];
+  }
+
+  function formatLawBlock(block) {
+    if (/^Статья\s+\d/i.test(block)) return formatArticleBlock(block);
+    const parts = block.split(/(?=ч\.\s*\d+\s)/i).map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      return `<div class="memo-article-block">${parts.map(formatPartBody).join("")}</div>`;
+    }
+    return `<div class="memo-article-block"><p class="law-p">${formatInline(block)}</p></div>`;
   }
 
   function formatArticleBlock(block) {
-    const trimmed = block.trim();
-    const headerRe = /^(Статья\s+\d+(?:\.\d+)*\.?\s*[^]*?)(?=ч\.\s*\d+\s|$)/i;
-    const hm = trimmed.match(headerRe);
-    let header = "";
-    let body = trimmed;
-    if (hm) {
-      header = hm[1].trim();
-      body = trimmed.slice(hm[0].length).trim();
+    const segments = block.split(/(?=ч\.\s*\d+\s)/i).map((s) => s.trim()).filter(Boolean);
+
+    if (segments.length === 1 && /^Статья/i.test(segments[0])) {
+      const seg = segments[0];
+      const punishMatch = seg.match(/(Наказание:\s*.+)$/i);
+      const punish = punishMatch ? punishMatch[1].trim() : "";
+      const title = punish ? seg.slice(0, seg.indexOf(punish)).trim() : seg;
+      let html = `<h3 class="law-article">${formatInline(title)}</h3>`;
+      if (punish) html += `<p class="law-part memo-punish">${formatInline(punish)}</p>`;
+      return `<div class="memo-article-block">${html}</div>`;
     }
-    const parts = body.split(/(?=ч\.\s*\d+\s)/).map((s) => s.trim()).filter(Boolean);
-    let inner = "";
-    if (parts.length) {
-      inner = `<ul class="memo-parts">${parts.map(formatPartLi).join("")}</ul>`;
-    } else if (body) {
-      inner = `<p class="memo-body-line">${esc(body)}</p>`;
+
+    let html = "";
+    let i = 0;
+    if (segments.length && /^Статья/i.test(segments[0])) {
+      html += `<h3 class="law-article">${formatInline(segments[0])}</h3>`;
+      i = 1;
     }
-    const titleHtml = header
-      ? `<div class="memo-article-title">${highlightArticleRef(esc(header))}</div>`
-      : "";
-    return `<div class="memo-article">${titleHtml}${inner}</div>`;
+    for (; i < segments.length; i += 1) html += formatPartBody(segments[i]);
+    return `<div class="memo-article-block">${html}</div>`;
   }
 
-  function formatPlainBlock(text) {
-    const parts = text.split(/(?=ч\.\s*\d+\s)/).map((s) => s.trim()).filter(Boolean);
-    if (parts.length > 1) {
-      return `<ul class="memo-parts">${parts.map(formatPartLi).join("")}</ul>`;
+  function formatPartBody(partText) {
+    const punishIdx = partText.search(/Наказание:/i);
+    let main = partText;
+    let punish = "";
+    if (punishIdx >= 0) {
+      main = partText.slice(0, punishIdx).trim();
+      punish = partText.slice(punishIdx).trim();
     }
-    const lines = text.split(/\n+/).map((s) => s.trim()).filter(Boolean);
-    if (lines.length > 1) {
-      return `<ul class="memo-parts">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+
+    let html = "";
+    const defPieces = main.split(
+      /(?=(?:Объект|Субъект|Объективная сторона преступления|Субъективная сторона преступления|Примечание|Пример)\s*(?:—|-|:))/i
+    ).map((s) => s.trim()).filter(Boolean);
+
+    const pieces = defPieces.length > 1 ? defPieces : [main];
+    for (const piece of pieces) {
+      const subs = piece.split(/(?=([а-яёa-z]\)\s))/i).map((s) => s.trim()).filter(Boolean);
+      const chunks = subs.length > 1 ? subs : [piece];
+      for (const sub of chunks) {
+        if (!sub) continue;
+        const isSub = /^[а-яёa-z]\)/i.test(sub);
+        const isDef = /^(Объект|Субъект|Объективная|Субъективная|Примечание|Пример)/i.test(sub);
+        html += `<p class="law-part${isSub || isDef ? " memo-sub" : ""}">${formatInline(sub)}</p>`;
+      }
     }
-    return `<p class="memo-body-line">${esc(text)}</p>`;
+    if (punish) html += `<p class="law-part memo-punish">${formatInline(punish)}</p>`;
+    return html;
   }
 
-  function formatPartLi(part) {
-    const safe = esc(part);
-    const html = safe.replace(/^(ч\.\s*\d+)/i, "<strong class=\"memo-part-num\">$1</strong>");
-    return `<li>${html}</li>`;
-  }
-
-  function highlightArticleRef(html) {
-    return html.replace(/(Статья\s+\d+(?:\.\d+)*)/i, "<strong>$1</strong>");
+  function formatInline(text) {
+    let s = esc(text);
+    s = s.replace(/(★+)/g, "<span class=\"memo-stars\">$1</span>");
+    s = s.replace(/^(ч\.\s*\d+)/i, "<span class=\"memo-kw\">$1</span>");
+    s = s.replace(/^(п\.\s*[а-яёa-z\d]+)/i, "<span class=\"memo-kw\">$1</span>");
+    s = s.replace(/^(Наказание:)/i, "<span class=\"memo-kw\">$1</span>");
+    s = s.replace(/^(Примечание|Пример|Исключение|Комментарий):/gi, "<span class=\"memo-kw\">$1</span>:");
+    s = s.replace(
+      /^(Объект|Субъект|Объективная сторона преступления|Субъективная сторона преступления)\s*(—|-)/i,
+      "<span class=\"memo-kw\">$1</span> $2"
+    );
+    s = s.replace(/^([а-яёa-z]\))/i, "<span class=\"memo-kw\">$1</span>");
+    return s;
   }
 
   function isEditableNode(node) {
