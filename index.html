@@ -21,7 +21,7 @@
         radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,197,24,0.08), transparent),
         radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52,152,219,0.06), transparent);
     }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 28px 18px 56px; }
+    .wrap { max-width: none; width: 100%; margin: 0; padding: 12px 14px 28px; box-sizing: border-box; }
 
     .hero { text-align: center; margin-bottom: 28px; }
     .hero h1 {
@@ -29,10 +29,10 @@
       background: linear-gradient(135deg, var(--accent), #fff8dc);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .hero p { margin: 0 auto; max-width: 520px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+    .hero p { margin: 0 auto; max-width: 680px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
 
     .main-tabs {
-      display: flex; gap: 0; max-width: 780px; margin: 22px auto 0;
+      display: flex; gap: 0; max-width: none; width: 100%; margin: 18px auto 0;
       background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
       box-shadow: var(--shadow);
     }
@@ -198,7 +198,8 @@
     details.tips .tip strong { display: block; margin-bottom: 4px; font-size: 0.82rem; }
 
     /* Laws tab — keep existing good design, polish slightly */
-    .law-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .law-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; width: 100%; }
+    .law-toolbar .law-search { flex: 1; min-width: 200px; }
     .law-meta { font-size: 0.82rem; color: var(--muted); }
     .law-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .law-tab {
@@ -215,9 +216,9 @@
     .law-tab.fib.active { background: var(--fib); border-color: var(--fib); }
     .law-tab.np.active { background: var(--np); border-color: var(--np); }
     .law-body {
-      max-height: min(72vh, 760px); overflow: auto; background: var(--panel-2);
-      border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
-      line-height: 1.58; font-size: 0.92rem;
+      max-height: min(78vh, 900px); overflow: auto; background: var(--panel-2);
+      border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px;
+      line-height: 1.58; font-size: 0.92rem; width: 100%; box-sizing: border-box;
     }
     .law-body h2.law-chapter { margin: 1.4em 0 0.6em; font-size: 1.05rem; color: var(--accent); }
     .law-body h2.law-chapter:first-child { margin-top: 0; }
@@ -320,7 +321,7 @@
     }
     .main-tab.active.memos .memo-tab-badge { background: rgba(0,0,0,0.2); }
     .memo-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
-    .memo-search { flex: 1; min-width: 180px; max-width: 360px; }
+    .memo-search { flex: 1; min-width: 180px; max-width: 480px; }
     .memo-count { font-size: 0.82rem; color: var(--muted); }
     .memo-clear-btn {
       background: transparent; border: 1px solid rgba(231,76,60,0.45); color: #ffb4ab;
@@ -423,23 +424,46 @@
     .memo-law-body p.law-part.memo-line.memo-sub { border-left: none; margin-left: 0; }
     .memo-kw { color: var(--accent); font-weight: 600; }
     .memo-stars { color: #e74c3c; font-weight: 700; letter-spacing: 0.05em; }
-    body.memos-full .wrap {
-      max-width: none; width: 100%; margin: 0;
-      padding: 10px 8px 16px; box-sizing: border-box;
+    body.mode-scenarios .hero,
+    body.mode-search .hero,
+    body.mode-laws .hero,
+    body.mode-quiz .hero,
+    body.mode-memos .hero { margin-bottom: 10px; }
+    body.mode-scenarios .hero h1,
+    body.mode-search .hero h1,
+    body.mode-laws .hero h1,
+    body.mode-quiz .hero h1,
+    body.mode-memos .hero h1 { font-size: clamp(1.35rem, 3vw, 1.75rem); margin-bottom: 4px; }
+    body.mode-scenarios .hero p,
+    body.mode-search .hero p,
+    body.mode-laws .hero p,
+    body.mode-quiz .hero p,
+    body.mode-memos .hero p { font-size: 0.88rem; }
+
+    body.mode-scenarios #workSection,
+    body.mode-search #workSection,
+    body.mode-scenarios #result,
+    body.mode-search #result { width: 100%; }
+
+    body.mode-laws #lawsSection.card { margin-top: 8px; }
+    body.mode-laws #lawsViewer { width: 100%; }
+    body.mode-laws .law-body {
+      max-height: calc(100vh - 220px); min-height: calc(100vh - 280px);
     }
-    body.memos-full .main-tabs { max-width: none; width: 100%; }
-    body.memos-full .hero { margin-bottom: 10px; }
-    body.memos-full .hero h1 { font-size: clamp(1.35rem, 3vw, 1.75rem); margin-bottom: 4px; }
-    body.memos-full .hero p { font-size: 0.88rem; }
-    body.memos-full #memosSection.card {
+    body.mode-laws .law-toolbar .law-search { flex: 1; min-width: 200px; }
+
+    body.mode-quiz #quizSection.card { width: 100%; }
+    body.mode-quiz #quizViewer { width: 100%; max-width: none; }
+
+    body.mode-memos #memosSection.card {
       margin-top: 4px; padding: 0; background: transparent; border: none; box-shadow: none;
     }
-    body.memos-full #memosSection .card-label { display: none; }
-    body.memos-full #memosViewer {
-      min-height: calc(100vh - 168px); display: flex; flex-direction: column;
+    body.mode-memos #memosSection .card-label { display: none; }
+    body.mode-memos #memosViewer {
+      min-height: calc(100vh - 168px); display: flex; flex-direction: column; width: 100%;
     }
-    body.memos-full .memo-toolbar { flex-shrink: 0; }
-    body.memos-full .memo-table-wrap {
+    body.mode-memos .memo-toolbar { flex-shrink: 0; }
+    body.mode-memos .memo-table-wrap {
       flex: 1; max-height: none; min-height: calc(100vh - 220px); width: 100%;
     }
     @media (max-width: 720px) {
@@ -644,7 +668,8 @@
       quizSection.hidden = !isQuiz;
       memosSection.hidden = !isMemos;
       result.hidden = isLaws || isQuiz || isMemos;
-      document.body.classList.toggle("memos-full", isMemos);
+      document.body.classList.remove("mode-scenarios", "mode-search", "mode-laws", "mode-quiz", "mode-memos");
+      document.body.classList.add(`mode-${mode}`);
 
       catBar.hidden = !isScenarios;
       codeBar.hidden = !isSearch;
