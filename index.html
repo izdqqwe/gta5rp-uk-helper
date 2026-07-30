@@ -328,6 +328,31 @@
       overflow: auto; max-height: min(72vh, 720px);
       padding-right: 4px;
     }
+    .memo-table-wrap {
+      overflow: auto; max-height: min(72vh, 720px);
+      border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
+    }
+    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: fixed; }
+    .memo-table th {
+      position: sticky; top: 0; z-index: 1; background: var(--panel);
+      text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
+      font-size: 0.78rem; color: var(--muted); white-space: nowrap;
+    }
+    .memo-table td {
+      padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    .memo-table tr:last-child td { border-bottom: none; }
+    .memo-table tbody tr:hover td { background: rgba(46,204,113,0.04); }
+    .memo-table th:nth-child(1), .memo-table td.memo-date { width: 108px; }
+    .memo-table th:nth-child(2), .memo-table td.memo-from { width: 88px; }
+    .memo-table th:nth-child(3), .memo-table td.memo-ref-col { width: 72px; }
+    .memo-table th:nth-child(5), .memo-table td.memo-actions { width: 64px; }
+    .memo-date { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+    .memo-from { color: var(--muted); font-size: 0.78rem; }
+    .memo-ref-col { font-weight: 700; color: var(--accent); font-size: 0.78rem; }
+    .memo-text-cell { min-width: 280px; }
+    .memo-text-cell .memo-law-body { font-size: 0.88rem; }
+    .memo-actions { white-space: nowrap; text-align: center; }
     .memo-card {
       background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
       border-left: 4px solid var(--memo); overflow: hidden;
@@ -384,8 +409,11 @@
       min-height: calc(100vh - 168px); display: flex; flex-direction: column;
     }
     body.memos-full .memo-toolbar { flex-shrink: 0; }
-    body.memos-full .memo-list {
+    body.memos-full .memo-table-wrap {
       flex: 1; max-height: none; min-height: calc(100vh - 220px);
+    }
+    @media (max-width: 720px) {
+      .memo-table th:nth-child(2), .memo-table td.memo-from { display: none; }
     }
 
 

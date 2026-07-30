@@ -339,6 +339,14 @@
     badge.hidden = n === 0;
   }
 
+  function parseSource(source) {
+    const parts = String(source || "").split("·").map((s) => s.trim()).filter(Boolean);
+    return {
+      from: parts[0] || "—",
+      tag: parts.slice(1).join(" · ") || "—",
+    };
+  }
+
   window.initMemosViewer = function initMemosViewer(root) {
     function render(filter = "") {
       const q = filter.trim().toLowerCase().replace(/ё/g, "e");
@@ -356,22 +364,35 @@
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
-        <div class="memo-list">
-          ${list.map((m) => `
-            <article class="memo-card" data-id="${esc(m.id)}">
-              <header class="memo-card-head">
-                <div class="memo-card-meta">
-                  <time>${esc(formatDate(m.created))}</time>
-                  <span class="memo-card-src">${esc(m.source)}</span>
-                  ${m.ref ? `<span class="memo-card-ref">ст. ${esc(m.ref)}</span>` : ""}
-                </div>
-                <div class="memo-card-actions">
-                  <button type="button" class="memo-copy" title="Копировать">📋</button>
-                  <button type="button" class="memo-del" title="Удалить">✕</button>
-                </div>
-              </header>
-              <div class="memo-card-body">${formatMemoHtml(m.text)}</div>
-            </article>`).join("")}
+        <div class="memo-table-wrap">
+          <table class="memo-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Откуда</th>
+                <th>Статья</th>
+                <th>Текст</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((m) => {
+                const src = parseSource(m.source);
+                const refCol = m.ref ? esc(m.ref) : esc(src.tag);
+                return `
+                <tr data-id="${esc(m.id)}">
+                  <td class="memo-date">${esc(formatDate(m.created))}</td>
+                  <td class="memo-from">${esc(src.from)}</td>
+                  <td class="memo-ref-col">${refCol}</td>
+                  <td class="memo-text-cell">${formatMemoHtml(m.text)}</td>
+                  <td class="memo-actions">
+                    <button type="button" class="memo-copy" title="Копировать">📋</button>
+                    <button type="button" class="memo-del" title="Удалить">✕</button>
+                  </td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
         </div>` : `
         <div class="empty-state memo-empty">
           <p>Памяток пока нет.</p>
@@ -389,16 +410,16 @@
 
       root.querySelectorAll(".memo-del").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const card = btn.closest(".memo-card");
-          if (card) deleteLawMemo(card.dataset.id);
+          const row = btn.closest("tr");
+          if (row) deleteLawMemo(row.dataset.id);
           render(filter);
         });
       });
 
       root.querySelectorAll(".memo-copy").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const card = btn.closest(".memo-card");
-          const id = card?.dataset.id;
+          const row = btn.closest("tr");
+          const id = row?.dataset.id;
           const memo = loadMemos().find((x) => x.id === id);
           if (!memo) return;
           try {
@@ -410,8 +431,8 @@
         });
       });
 
-      const listEl = root.querySelector(".memo-list");
-      if (listEl) listEl.scrollTop = listEl.scrollHeight;
+      const wrap = root.querySelector(".memo-table-wrap");
+      if (wrap) wrap.scrollTop = wrap.scrollHeight;
     }
 
     render();
