@@ -323,32 +323,59 @@
       border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 0.82rem; cursor: pointer;
     }
     .memo-clear-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .memo-table-wrap {
-      overflow: auto; max-height: min(70vh, 640px);
-      border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
+    .memo-list {
+      display: flex; flex-direction: column; gap: 12px;
+      overflow: auto; max-height: min(72vh, 720px);
+      padding-right: 4px;
     }
-    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
-    .memo-table th {
-      position: sticky; top: 0; background: var(--panel); text-align: left;
-      padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.78rem;
-      color: var(--muted); white-space: nowrap;
+    .memo-card {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
+      border-left: 4px solid var(--memo); overflow: hidden;
     }
-    .memo-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .memo-table tr:last-child td { border-bottom: none; }
-    .memo-table tr:hover td { background: rgba(46,204,113,0.04); }
-    .memo-date { white-space: nowrap; color: var(--muted); font-size: 0.78rem; }
-    .memo-src { white-space: nowrap; max-width: 140px; font-size: 0.78rem; color: var(--muted); }
-    .memo-ref { white-space: nowrap; font-weight: 700; color: var(--accent); font-size: 0.78rem; }
-    .memo-text { line-height: 1.45; min-width: 200px; }
-    .memo-actions { white-space: nowrap; }
+    .memo-card-head {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+      padding: 10px 14px; background: rgba(46,204,113,0.06); border-bottom: 1px solid var(--border);
+    }
+    .memo-card-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.78rem; }
+    .memo-card-meta time { color: var(--muted); white-space: nowrap; }
+    .memo-card-src { color: var(--muted); }
+    .memo-card-ref {
+      background: rgba(245,197,24,0.12); color: var(--accent); font-weight: 700;
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .memo-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .memo-card-body { padding: 14px 16px 16px; line-height: 1.55; font-size: 0.9rem; }
+    .memo-article { margin-bottom: 14px; }
+    .memo-article:last-child { margin-bottom: 0; }
+    .memo-article-title {
+      font-weight: 700; color: var(--accent); margin-bottom: 10px; font-size: 0.95rem;
+    }
+    .memo-parts { margin: 0; padding-left: 1.2rem; list-style: disc; }
+    .memo-parts li { margin-bottom: 8px; color: #c8d4e4; }
+    .memo-parts li:last-child { margin-bottom: 0; }
+    .memo-part-num { color: var(--memo); }
+    .memo-body-line { margin: 0; color: #c8d4e4; }
     .memo-copy, .memo-del {
       background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
       padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
     }
     .memo-copy:hover { border-color: var(--memo); }
     .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
-    @media (max-width: 640px) {
-      .memo-table th:nth-child(2), .memo-table td.memo-src { display: none; }
+    .memo-empty { padding: 48px 16px; }
+    body.memos-full .wrap { max-width: 960px; padding-bottom: 20px; }
+    body.memos-full .hero { margin-bottom: 10px; }
+    body.memos-full .hero h1 { font-size: clamp(1.35rem, 3vw, 1.75rem); margin-bottom: 4px; }
+    body.memos-full .hero p { font-size: 0.88rem; }
+    body.memos-full #memosSection.card {
+      margin-top: 4px; padding: 0; background: transparent; border: none; box-shadow: none;
+    }
+    body.memos-full #memosSection .card-label { display: none; }
+    body.memos-full #memosViewer {
+      min-height: calc(100vh - 168px); display: flex; flex-direction: column;
+    }
+    body.memos-full .memo-toolbar { flex-shrink: 0; }
+    body.memos-full .memo-list {
+      flex: 1; max-height: none; min-height: calc(100vh - 220px);
     }
 
 
@@ -549,6 +576,7 @@
       quizSection.hidden = !isQuiz;
       memosSection.hidden = !isMemos;
       result.hidden = isLaws || isQuiz || isMemos;
+      document.body.classList.toggle("memos-full", isMemos);
 
       catBar.hidden = !isScenarios;
       codeBar.hidden = !isSearch;
@@ -584,6 +612,8 @@
       if (isMemos && !memosReady) {
         window.initMemosViewer?.(memosViewer);
         memosReady = true;
+      } else if (isMemos && memosReady) {
+        window.dispatchEvent(new CustomEvent("memos-refresh"));
       }
 
       if (isLaws && !lawsReady) {
@@ -592,7 +622,7 @@
       }
 
       renderExamples();
-      if (!isLaws) analyze();
+      if (isScenarios || isSearch) analyze();
     }
 
     document.querySelectorAll(".main-tab").forEach((btn) => {
@@ -686,7 +716,7 @@
     }
 
     async function analyze() {
-      if (mode === "laws") return;
+      if (mode === "laws" || mode === "quiz" || mode === "memos") return;
       const text = input.value.trim();
 
       if (mode === "scenarios") {
@@ -774,6 +804,7 @@
     }
 
     function render(data) {
+      if (mode === "memos" || mode === "laws" || mode === "quiz") return;
       result.hidden = false;
       const isScenarios = data.mode === "scenarios";
       const guideCount = data.guides?.length || 0;

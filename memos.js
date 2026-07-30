@@ -28,6 +28,10 @@
     window.dispatchEvent(new CustomEvent("memos-updated", { detail: { count: list.length } }));
   }
 
+  function sortedMemos(list) {
+    return list.slice().sort((a, b) => new Date(a.created) - new Date(b.created));
+  }
+
   function uid() {
     return `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -41,6 +45,63 @@
     } catch {
       return iso;
     }
+  }
+
+  /** Разбить текст закона на статьи и пункты ч.N */
+  function formatMemoHtml(raw) {
+    const text = String(raw || "").replace(/\s+/g, " ").trim();
+    if (!text) return "";
+
+    const articles = text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
+    if (articles.length > 1 || /^Статья\s+\d/i.test(text)) {
+      return articles.map(formatArticleBlock).join("");
+    }
+    return formatPlainBlock(text);
+  }
+
+  function formatArticleBlock(block) {
+    const trimmed = block.trim();
+    const headerRe = /^(Статья\s+\d+(?:\.\d+)*\.?\s*[^]*?)(?=ч\.\s*\d+\s|$)/i;
+    const hm = trimmed.match(headerRe);
+    let header = "";
+    let body = trimmed;
+    if (hm) {
+      header = hm[1].trim();
+      body = trimmed.slice(hm[0].length).trim();
+    }
+    const parts = body.split(/(?=ч\.\s*\d+\s)/).map((s) => s.trim()).filter(Boolean);
+    let inner = "";
+    if (parts.length) {
+      inner = `<ul class="memo-parts">${parts.map(formatPartLi).join("")}</ul>`;
+    } else if (body) {
+      inner = `<p class="memo-body-line">${esc(body)}</p>`;
+    }
+    const titleHtml = header
+      ? `<div class="memo-article-title">${highlightArticleRef(esc(header))}</div>`
+      : "";
+    return `<div class="memo-article">${titleHtml}${inner}</div>`;
+  }
+
+  function formatPlainBlock(text) {
+    const parts = text.split(/(?=ч\.\s*\d+\s)/).map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      return `<ul class="memo-parts">${parts.map(formatPartLi).join("")}</ul>`;
+    }
+    const lines = text.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      return `<ul class="memo-parts">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+    }
+    return `<p class="memo-body-line">${esc(text)}</p>`;
+  }
+
+  function formatPartLi(part) {
+    const safe = esc(part);
+    const html = safe.replace(/^(ч\.\s*\d+)/i, "<strong class=\"memo-part-num\">$1</strong>");
+    return `<li>${html}</li>`;
+  }
+
+  function highlightArticleRef(html) {
+    return html.replace(/(Статья\s+\d+(?:\.\d+)*)/i, "<strong>$1</strong>");
   }
 
   function isEditableNode(node) {
@@ -65,7 +126,8 @@
       }
       el = el.parentElement;
     }
-    return "";
+    const m = range?.toString?.().match(/Статья\s+(\d+(?:\.\d+)*)/i);
+    return m ? m[1] : "";
   }
 
   function detectLawLabel() {
@@ -97,8 +159,7 @@
     floatingEl = document.createElement("div");
     floatingEl.className = "memo-float";
     floatingEl.hidden = true;
-    floatingEl.innerHTML = `
-      <button type="button" class="memo-float-btn" id="memoAddBtn">📌 В памятки</button>`;
+    floatingEl.innerHTML = `<button type="button" class="memo-float-btn" id="memoAddBtn">📌 В памятки</button>`;
     document.body.appendChild(floatingEl);
     floatingEl.querySelector("#memoAddBtn").addEventListener("mousedown", (e) => e.preventDefault());
     floatingEl.querySelector("#memoAddBtn").addEventListener("click", () => {
@@ -134,6 +195,10 @@
   }
 
   function onSelectionChange() {
+    if (getMode() === "memos") {
+      hideFloating();
+      return;
+    }
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) {
       hideFloating();
@@ -182,7 +247,7 @@
     };
     const dup = list.some((m) => m.text === entry.text && m.source === entry.source);
     if (dup) return false;
-    list.unshift(entry);
+    list.push(entry);
     saveMemos(list);
     flashToast("Добавлено в памятки");
     return true;
@@ -240,7 +305,7 @@
   window.initMemosViewer = function initMemosViewer(root) {
     function render(filter = "") {
       const q = filter.trim().toLowerCase().replace(/ё/g, "e");
-      let list = loadMemos();
+      let list = sortedMemos(loadMemos());
       if (q) {
         list = list.filter((m) =>
           [m.text, m.source, m.ref].join(" ").toLowerCase().replace(/ё/g, "e").includes(q)
@@ -248,42 +313,32 @@
       }
 
       root.innerHTML = `
-        <p class="card-hint">Выдели текст на любой вкладке → нажми <strong>«В памятки»</strong>. Всё хранится в браузере на этом устройстве.</p>
         <div class="memo-toolbar">
           <input type="search" class="law-search memo-search" placeholder="Поиск по памяткам…" value="${esc(filter)}" />
-          <span class="memo-count">${list.length} записей</span>
+          <span class="memo-count">${list.length} записей · старые сверху</span>
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
-        <div class="memo-table-wrap">
-          <table class="memo-table">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Откуда</th>
-                <th>Статья</th>
-                <th>Текст</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${list.map((m) => `
-                <tr data-id="${esc(m.id)}">
-                  <td class="memo-date">${esc(formatDate(m.created))}</td>
-                  <td class="memo-src">${esc(m.source)}</td>
-                  <td class="memo-ref">${m.ref ? esc(m.ref) : "—"}</td>
-                  <td class="memo-text">${esc(m.text)}</td>
-                  <td class="memo-actions">
-                    <button type="button" class="memo-copy" title="Копировать">📋</button>
-                    <button type="button" class="memo-del" title="Удалить">✕</button>
-                  </td>
-                </tr>`).join("")}
-            </tbody>
-          </table>
+        <div class="memo-list">
+          ${list.map((m) => `
+            <article class="memo-card" data-id="${esc(m.id)}">
+              <header class="memo-card-head">
+                <div class="memo-card-meta">
+                  <time>${esc(formatDate(m.created))}</time>
+                  <span class="memo-card-src">${esc(m.source)}</span>
+                  ${m.ref ? `<span class="memo-card-ref">ст. ${esc(m.ref)}</span>` : ""}
+                </div>
+                <div class="memo-card-actions">
+                  <button type="button" class="memo-copy" title="Копировать">📋</button>
+                  <button type="button" class="memo-del" title="Удалить">✕</button>
+                </div>
+              </header>
+              <div class="memo-card-body">${formatMemoHtml(m.text)}</div>
+            </article>`).join("")}
         </div>` : `
-        <div class="empty-state">
+        <div class="empty-state memo-empty">
           <p>Памяток пока нет.</p>
-          <p style="font-size:0.85rem">Открой «Законы» или «Подбор», выдели важный фрагмент — появится кнопка «В памятки».</p>
+          <p>Открой «Законы», выдели статью или пункт → «В памятки».</p>
         </div>`}`;
 
       root.querySelector(".memo-search")?.addEventListener("input", (e) => render(e.target.value));
@@ -297,28 +352,33 @@
 
       root.querySelectorAll(".memo-del").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const row = btn.closest("tr");
-          if (row) deleteLawMemo(row.dataset.id);
+          const card = btn.closest(".memo-card");
+          if (card) deleteLawMemo(card.dataset.id);
           render(filter);
         });
       });
 
       root.querySelectorAll(".memo-copy").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const row = btn.closest("tr");
-          const text = row?.querySelector(".memo-text")?.textContent;
-          if (!text) return;
+          const card = btn.closest(".memo-card");
+          const id = card?.dataset.id;
+          const memo = loadMemos().find((x) => x.id === id);
+          if (!memo) return;
           try {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(memo.text);
             flashToast("Скопировано");
           } catch {
             flashToast("Не удалось скопировать");
           }
         });
       });
+
+      const listEl = root.querySelector(".memo-list");
+      if (listEl) listEl.scrollTop = listEl.scrollHeight;
     }
 
     render();
     window.addEventListener("memos-updated", () => render(root.querySelector(".memo-search")?.value || ""));
+    window.addEventListener("memos-refresh", () => render(root.querySelector(".memo-search")?.value || ""));
   };
 })();
