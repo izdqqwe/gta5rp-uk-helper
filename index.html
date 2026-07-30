@@ -341,7 +341,7 @@
     .memo-col-from { width: 64px; }
     .memo-col-ref { width: 48px; }
     .memo-col-text { width: auto; }
-    .memo-col-act { width: 56px; }
+    .memo-col-act { width: 44px; }
     .memo-table th {
       position: sticky; top: 0; z-index: 1; background: var(--panel);
       text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -357,16 +357,6 @@
     .memo-table th:nth-child(3), .memo-table td.memo-ref-col { white-space: nowrap; }
     .memo-table th:nth-child(5), .memo-table td.memo-actions { white-space: nowrap; }
     .memo-text-cell { word-wrap: break-word; overflow-wrap: anywhere; cursor: text; }
-    .memo-cell-bar {
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-      margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
-    }
-    .memo-edit-link {
-      background: rgba(245,197,24,0.15); border: 1px solid var(--accent); color: var(--accent);
-      border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer;
-    }
-    .memo-edit-link:hover { background: rgba(245,197,24,0.28); }
-    .memo-cell-bar-hint { font-size: 0.72rem; color: var(--muted); }
     .memo-cell-editor { margin-top: 4px; }
     .memo-date { color: var(--muted); font-size: 0.78rem; }
     .memo-from { color: var(--muted); font-size: 0.78rem; }
@@ -383,17 +373,22 @@
       font: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;
     }
     .memo-edit-bar { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
-    .memo-actions { white-space: nowrap; text-align: center; vertical-align: top; }
-    .memo-actions button { display: block; width: 100%; margin-bottom: 4px; }
-    .memo-actions button:last-child { margin-bottom: 0; }
-    .memo-edit, .memo-unhl, .memo-copy, .memo-del {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
-      padding: 3px 6px; cursor: pointer; font-size: 0.72rem; font-weight: 600; color: var(--muted);
-      width: 100%;
+    .memo-actions {
+      white-space: nowrap; text-align: center; vertical-align: top;
+      display: flex; flex-direction: column; gap: 5px; align-items: center; padding-top: 4px;
     }
-    .memo-copy:hover { border-color: var(--memo); }
-    .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
-    .memo-edit:hover, .memo-unhl:hover { border-color: var(--accent); }
+    .memo-icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; padding: 0; margin: 0;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      cursor: pointer; color: var(--muted); flex-shrink: 0;
+    }
+    .memo-icon-btn svg { width: 17px; height: 17px; display: block; }
+    .memo-icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .memo-icon-btn.memo-hl-action { color: var(--accent); }
+    .memo-icon-btn.memo-hl-action:hover { background: rgba(245,197,24,0.12); }
+    .memo-icon-btn.memo-copy:hover { border-color: var(--memo); color: var(--memo); }
+    .memo-icon-btn.memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
     .memo-empty { padding: 48px 16px; }
     .memo-law-body { line-height: 1.58; font-size: 0.92rem; width: 100%; }
     .memo-law-body h3.law-article {

@@ -184,7 +184,7 @@
     while (el) {
       const tag = el.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable) return true;
-      if (el.classList?.contains("memo-float") || el.id === "memosViewer") return true;
+      if (el.classList?.contains("memo-float")) return true;
       el = el.parentElement;
     }
     return false;
@@ -253,7 +253,7 @@
       if (pendingHl?.id && pendingHl?.text) {
         addMemoHighlight(pendingHl.id, pendingHl.text);
         flashToast("Выделено");
-        memoRender?.();
+        window.dispatchEvent(new CustomEvent("memos-refresh"));
       }
       hideFloating();
       window.getSelection()?.removeAllRanges();
@@ -440,6 +440,28 @@
     return { from: parts[0] || "—", tag: parts.slice(1).join(" · ") || "—" };
   }
 
+  const MEMO_ICONS = {
+    edit: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+    hl: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.5 2.5c.8-.8 2.1-.8 2.9 0l1.1 1.1c.8.8.8 2.1 0 2.9L9.8 18.2l-4 1 1-4L17.5 2.5zM3 20h18v2H3v-2z"/></svg>`,
+    copy: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`,
+    del: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`,
+  };
+
+  function memoIconBtn(cls, title, icon) {
+    return `<button type="button" class="memo-icon-btn ${cls}" title="${esc(title)}" aria-label="${esc(title)}">${icon}</button>`;
+  }
+
+  function getSelectionText() {
+    return (window.getSelection()?.toString() || "").replace(/\s+/g, " ").trim();
+  }
+
+  function highlightFromSelection(rowId) {
+    const text = getSelectionText();
+    if (text.length < MIN_LEN) return false;
+    addMemoHighlight(rowId, text);
+    return true;
+  }
+
   window.initMemosViewer = function initMemosViewer(root) {
     let editingId = null;
 
@@ -448,8 +470,6 @@
       const cell = row.querySelector(".memo-text-cell");
       const content = cell.querySelector(".memo-cell-content");
       if (content) content.hidden = true;
-      let bar = cell.querySelector(".memo-cell-bar");
-      if (bar) bar.hidden = true;
 
       let editor = cell.querySelector(".memo-cell-editor");
       if (!editor) {
@@ -476,6 +496,24 @@
       ta.focus();
     }
 
+    function saveEdit(row) {
+      const id = row?.dataset?.id;
+      const ta = row?.querySelector(".memo-edit-area");
+      if (!id || !ta) return false;
+      const val = ta.value.replace(/\r\n/g, "\n").trim();
+      if (val.length < MIN_LEN) {
+        flashToast("Слишком короткий текст");
+        return false;
+      }
+      const memo = loadMemos().find((m) => m.id === id);
+      if (!memo) return false;
+      updateMemo(id, {
+        text: val,
+        highlights: (memo.highlights || []).filter((h) => val.toLowerCase().includes(h.toLowerCase())),
+      });
+      return true;
+    }
+
     function cancelEdit() {
       editingId = null;
     }
@@ -493,7 +531,7 @@
       root.innerHTML = `
         <div class="memo-toolbar">
           <input type="search" class="law-search memo-search" placeholder="Поиск по памяткам…" value="${esc(filter)}" />
-          <span class="memo-count">${list.length} записей · выдели текст → «Выделить жёлтым» · двойной клик — редактировать</span>
+          <span class="memo-count">${list.length} записей · выдели текст → 🖍 или кнопка маркера · двойной клик — редактировать</span>
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
@@ -525,17 +563,13 @@
                   <td class="memo-from">${esc(src.from)}</td>
                   <td class="memo-ref-col">${refCol}</td>
                   <td class="memo-text-cell">
-                    <div class="memo-cell-bar">
-                      <button type="button" class="memo-edit-link">Редактировать</button>
-                      <span class="memo-cell-bar-hint">· выдели текст → кнопка «Выделить жёлтым» сверху</span>
-                    </div>
                     <div class="memo-cell-content">${formatMemoHtml(m.text, m.highlights)}</div>
                   </td>
                   <td class="memo-actions">
-                    <button type="button" class="memo-edit" title="Редактировать">Ред</button>
-                    <button type="button" class="memo-unhl" title="Сбрать жёлтое">Жлт</button>
-                    <button type="button" class="memo-copy" title="Копировать">Коп</button>
-                    <button type="button" class="memo-del" title="Удалить">Уд</button>
+                    ${memoIconBtn("memo-edit", "Редактировать", MEMO_ICONS.edit)}
+                    ${memoIconBtn("memo-hl-action", "Выделить жёлтым", MEMO_ICONS.hl)}
+                    ${memoIconBtn("memo-copy", "Копировать", MEMO_ICONS.copy)}
+                    ${memoIconBtn("memo-del", "Удалить", MEMO_ICONS.del)}
                   </td>
                 </tr>`;
               }).join("")}
@@ -558,12 +592,17 @@
 
       if (!root.dataset.memoClickBound) {
         root.dataset.memoClickBound = "1";
+
+        root.addEventListener("mousedown", (e) => {
+          if (e.target.closest(".memo-hl-action, #memoHlBtn")) e.preventDefault();
+        });
+
         root.addEventListener("click", (e) => {
           const filterVal = root.querySelector(".memo-search")?.value || "";
 
-          const editLink = e.target.closest(".memo-edit-link, .memo-edit");
-          if (editLink) {
-            const row = editLink.closest("tr");
+          const editBtn = e.target.closest(".memo-edit");
+          if (editBtn) {
+            const row = editBtn.closest("tr");
             const memo = loadMemos().find((m) => m.id === row?.dataset.id);
             if (row && memo) startEdit(row, memo, filterVal);
             return;
@@ -571,33 +610,30 @@
 
           const saveBtn = e.target.closest(".memo-save");
           if (saveBtn) {
-            const cell = saveBtn.closest(".memo-text-cell");
+            e.preventDefault();
             const row = saveBtn.closest("tr");
-            const memo = loadMemos().find((m) => m.id === row?.dataset.id);
-            const val = cell?.querySelector(".memo-edit-area")?.value?.replace(/\s+/g, " ")?.trim();
-            if (memo && val && val.length >= MIN_LEN) {
-              updateMemo(memo.id, {
-                text: val,
-                highlights: (memo.highlights || []).filter((h) => val.toLowerCase().includes(h.toLowerCase())),
-              });
-              flashToast("Сохранено");
-            }
-            cancelEdit();
+            if (row && saveEdit(row)) flashToast("Сохранено");
+            editingId = null;
             render(filterVal);
             return;
           }
 
           const cancelBtn = e.target.closest(".memo-cancel");
           if (cancelBtn) {
-            cancelEdit();
+            editingId = null;
             render(filterVal);
             return;
           }
 
-          const unhlBtn = e.target.closest(".memo-unhl");
-          if (unhlBtn) {
-            const row = unhlBtn.closest("tr");
-            if (row) updateMemo(row.dataset.id, { highlights: [] });
+          const hlBtn = e.target.closest(".memo-hl-action");
+          if (hlBtn) {
+            const row = hlBtn.closest("tr");
+            if (row && highlightFromSelection(row.dataset.id)) {
+              flashToast("Выделено");
+              window.getSelection()?.removeAllRanges();
+            } else {
+              flashToast("Сначала выдели текст в строке");
+            }
             render(filterVal);
             return;
           }
@@ -624,7 +660,7 @@
         root.addEventListener("dblclick", (e) => {
           const cell = e.target.closest(".memo-text-cell");
           if (!cell || cell.querySelector(".memo-edit-area")) return;
-          if (e.target.closest(".memo-cell-bar, button")) return;
+          if (e.target.closest(".memo-actions, button")) return;
           const row = cell.closest("tr");
           const memo = loadMemos().find((m) => m.id === row?.dataset.id);
           if (row && memo) startEdit(row, memo, root.querySelector(".memo-search")?.value || "");
@@ -647,6 +683,9 @@
     };
     render();
     window.addEventListener("memos-updated", memoRender);
-    window.addEventListener("memos-refresh", () => render(root.querySelector(".memo-search")?.value || ""));
+    window.addEventListener("memos-refresh", () => {
+      if (editingId) return;
+      render(root.querySelector(".memo-search")?.value || "");
+    });
   };
 })();
