@@ -10,7 +10,7 @@
       --bg: #0a0e14; --panel: #141c28; --panel-2: #0f1520; --border: #2a3548;
       --text: #eef2f8; --muted: #8b9cb3;
       --accent: #f5c518; --pk: #5dade2; --adv: #bb86fc; --p1: #ff9f43;
-      --fib: #3498db; --np: #d4af37; --sit: #2ecc71; --laws: #7f8c9a; --scn: #a855f7; --quiz: #e67e22;
+      --fib: #3498db; --np: #d4af37; --sit: #2ecc71; --laws: #7f8c9a; --scn: #a855f7; --quiz: #e67e22; --memo: #2ecc71;
       --radius: 14px; --shadow: 0 8px 32px rgba(0,0,0,0.35);
     }
     * { box-sizing: border-box; }
@@ -32,7 +32,7 @@
     .hero p { margin: 0 auto; max-width: 520px; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
 
     .main-tabs {
-      display: flex; gap: 0; max-width: 680px; margin: 22px auto 0;
+      display: flex; gap: 0; max-width: 780px; margin: 22px auto 0;
       background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
       box-shadow: var(--shadow);
     }
@@ -45,6 +45,7 @@
     .main-tab.active.search { background: var(--accent); color: #111; }
     .main-tab.active.laws { background: var(--laws); color: #111; }
     .main-tab.active.quiz { background: var(--quiz); color: #111; }
+    .main-tab.active.memos { background: var(--memo); color: #111; }
 
     .card {
       background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
@@ -290,6 +291,66 @@
     .quiz-wrong-e { margin: 8px 0 0; font-size: 0.86rem; color: var(--muted); }
     .quiz-summary-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
     .quiz-mistakes-btn { background: linear-gradient(135deg, #e74c3c, #c0392b) !important; color: #fff !important; }
+    /* Memos */
+    .memo-float {
+      position: absolute; z-index: 9999;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+    }
+    .memo-float-btn {
+      background: linear-gradient(135deg, var(--memo), #27ae60);
+      color: #111; border: none; border-radius: 999px;
+      padding: 8px 14px; font: inherit; font-weight: 700; font-size: 0.82rem;
+      cursor: pointer; white-space: nowrap;
+    }
+    .memo-float-btn:hover { filter: brightness(1.08); }
+    .memo-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+      background: var(--memo); color: #111; font-weight: 700; font-size: 0.88rem;
+      padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s; z-index: 10000;
+    }
+    .memo-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .memo-tab-badge {
+      display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px;
+      background: rgba(0,0,0,0.25); border-radius: 999px; font-size: 0.7rem; font-weight: 800;
+    }
+    .main-tab.active.memos .memo-tab-badge { background: rgba(0,0,0,0.2); }
+    .memo-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .memo-search { flex: 1; min-width: 180px; max-width: 360px; }
+    .memo-count { font-size: 0.82rem; color: var(--muted); }
+    .memo-clear-btn {
+      background: transparent; border: 1px solid rgba(231,76,60,0.45); color: #ffb4ab;
+      border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 0.82rem; cursor: pointer;
+    }
+    .memo-clear-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .memo-table-wrap {
+      overflow: auto; max-height: min(70vh, 640px);
+      border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
+    }
+    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .memo-table th {
+      position: sticky; top: 0; background: var(--panel); text-align: left;
+      padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.78rem;
+      color: var(--muted); white-space: nowrap;
+    }
+    .memo-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .memo-table tr:last-child td { border-bottom: none; }
+    .memo-table tr:hover td { background: rgba(46,204,113,0.04); }
+    .memo-date { white-space: nowrap; color: var(--muted); font-size: 0.78rem; }
+    .memo-src { white-space: nowrap; max-width: 140px; font-size: 0.78rem; color: var(--muted); }
+    .memo-ref { white-space: nowrap; font-weight: 700; color: var(--accent); font-size: 0.78rem; }
+    .memo-text { line-height: 1.45; min-width: 200px; }
+    .memo-actions { white-space: nowrap; }
+    .memo-copy, .memo-del {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
+    }
+    .memo-copy:hover { border-color: var(--memo); }
+    .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
+    @media (max-width: 640px) {
+      .memo-table th:nth-child(2), .memo-table td.memo-src { display: none; }
+    }
+
 
   </style>
 </head>
@@ -303,6 +364,7 @@
         <button type="button" class="main-tab search" data-mode="search">Подбор</button>
         <button type="button" class="main-tab laws" data-mode="laws">Законы</button>
         <button type="button" class="main-tab quiz" data-mode="quiz">Тренировка</button>
+        <button type="button" class="main-tab memos" data-mode="memos">Памятки</button>
       </div>
     </header>
 
@@ -352,6 +414,11 @@
       <div id="lawsViewer"></div>
     </section>
 
+    <section class="card" id="memosSection" hidden>
+      <label class="card-label">Мои памятки</label>
+      <div id="memosViewer"></div>
+    </section>
+
     <section class="card" id="quizSection" hidden>
       <label class="card-label">Тренировка по законам</label>
       <div id="quizViewer"></div>
@@ -370,6 +437,7 @@
   <script src="guides-embed.js"></script>
   <script src="quiz-embed.js"></script>
   <script src="quiz-viewer.js"></script>
+  <script src="memos.js"></script>
   <script src="laws-embed.js"></script>
   <script src="laws-viewer.js"></script>
   <script src="law-engine.js"></script>
@@ -430,6 +498,8 @@
     const lawsSection = document.getElementById("lawsSection");
     const quizSection = document.getElementById("quizSection");
     const quizViewer = document.getElementById("quizViewer");
+    const memosSection = document.getElementById("memosSection");
+    const memosViewer = document.getElementById("memosViewer");
     const lawsViewer = document.getElementById("lawsViewer");
     const catBar = document.getElementById("catBar");
     const codeBar = document.getElementById("codeBar");
@@ -439,6 +509,7 @@
     const heroText = document.getElementById("heroText");
     let lawsReady = false;
     let quizReady = false;
+    let memosReady = false;
 
     async function initCategories() {
       const cats = await window.listGuideCategories?.() || [];
@@ -469,13 +540,15 @@
       });
       const isLaws = mode === "laws";
       const isQuiz = mode === "quiz";
+      const isMemos = mode === "memos";
       const isScenarios = mode === "scenarios";
       const isSearch = mode === "search";
 
-      workSection.hidden = isLaws || isQuiz;
+      workSection.hidden = isLaws || isQuiz || isMemos;
       lawsSection.hidden = !isLaws;
       quizSection.hidden = !isQuiz;
-      result.hidden = isLaws || isQuiz;
+      memosSection.hidden = !isMemos;
+      result.hidden = isLaws || isQuiz || isMemos;
 
       catBar.hidden = !isScenarios;
       codeBar.hidden = !isSearch;
@@ -497,6 +570,8 @@
         heroText.textContent = "Поиск статей по всем кодексам. Сверься с полным текстом во вкладке «Законы».";
       } else if (isQuiz) {
         heroText.textContent = "Тесты по всем законам: экзамен, по теме, марафон и повтор ошибок.";
+      } else if (isMemos) {
+        heroText.textContent = "Сохранённые фрагменты: выдели текст → «В памятки».";
       } else {
         heroText.textContent = "Полные тексты законов штата San-Andreas.";
       }
@@ -504,6 +579,11 @@
       if (isQuiz && !quizReady) {
         window.initQuizViewer?.(quizViewer);
         quizReady = true;
+      }
+
+      if (isMemos && !memosReady) {
+        window.initMemosViewer?.(memosViewer);
+        memosReady = true;
       }
 
       if (isLaws && !lawsReady) {
@@ -734,6 +814,7 @@
       document.getElementById("tags").innerHTML = (data.tags || []).map((t) => `<span class="tag">${t}</span>`).join("");
     }
 
+    window.initMemosPicker?.({ getMode: () => mode });
     renderExamples();
     initCategories().then(() => { setMode("scenarios"); });
   </script>
