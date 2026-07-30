@@ -295,12 +295,16 @@
     .memo-float {
       position: absolute; z-index: 9999;
       box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+      display: flex; gap: 6px;
     }
     .memo-float-btn {
       background: linear-gradient(135deg, var(--memo), #27ae60);
       color: #111; border: none; border-radius: 999px;
       padding: 8px 14px; font: inherit; font-weight: 700; font-size: 0.82rem;
       cursor: pointer; white-space: nowrap;
+    }
+    .memo-float-btn.memo-float-hl {
+      background: linear-gradient(135deg, var(--accent), #e6b800); color: #111;
     }
     .memo-float-btn:hover { filter: brightness(1.08); }
     .memo-toast {
@@ -332,7 +336,12 @@
       overflow: auto; max-height: min(72vh, 720px);
       border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
     }
-    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: auto; }
+    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: fixed; }
+    .memo-col-date { width: 88px; }
+    .memo-col-from { width: 64px; }
+    .memo-col-ref { width: 48px; }
+    .memo-col-text { width: auto; }
+    .memo-col-act { width: 48px; }
     .memo-table th {
       position: sticky; top: 0; z-index: 1; background: var(--panel);
       text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -343,34 +352,37 @@
     }
     .memo-table tr:last-child td { border-bottom: none; }
     .memo-table tbody tr:hover td { background: rgba(46,204,113,0.04); }
-    .memo-table th:nth-child(1), .memo-table td.memo-date { width: 1%; white-space: nowrap; }
-    .memo-table th:nth-child(2), .memo-table td.memo-from { width: 1%; white-space: nowrap; }
-    .memo-table th:nth-child(3), .memo-table td.memo-ref-col { width: 1%; white-space: nowrap; }
-    .memo-table th:nth-child(5), .memo-table td.memo-actions { width: 1%; white-space: nowrap; }
-    .memo-text-cell { width: 99%; }
+    .memo-table th:nth-child(1), .memo-table td.memo-date { white-space: nowrap; }
+    .memo-table th:nth-child(2), .memo-table td.memo-from { white-space: nowrap; }
+    .memo-table th:nth-child(3), .memo-table td.memo-ref-col { white-space: nowrap; }
+    .memo-table th:nth-child(5), .memo-table td.memo-actions { white-space: nowrap; }
+    .memo-text-cell { word-wrap: break-word; overflow-wrap: anywhere; }
     .memo-date { color: var(--muted); font-size: 0.78rem; }
     .memo-from { color: var(--muted); font-size: 0.78rem; }
     .memo-ref-col { font-weight: 700; color: var(--accent); font-size: 0.78rem; }
-    .memo-text-cell .memo-law-body { font-size: 0.88rem; }
-    .memo-actions { white-space: nowrap; text-align: center; }
-    .memo-card {
-      background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
-      border-left: 4px solid var(--memo); overflow: hidden;
+    .memo-text-cell .memo-law-body { font-size: 0.9rem; width: 100%; }
+    .memo-hl {
+      background: rgba(245,197,24,0.55); color: #fff;
+      padding: 1px 3px; border-radius: 3px; box-decoration-break: clone;
     }
-    .memo-card-head {
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-      padding: 10px 14px; background: rgba(46,204,113,0.06); border-bottom: 1px solid var(--border);
+    .memo-edit-area {
+      width: 100%; min-height: 140px; padding: 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--panel); color: var(--text);
+      font: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box;
     }
-    .memo-card-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.78rem; }
-    .memo-card-meta time { color: var(--muted); white-space: nowrap; }
-    .memo-card-src { color: var(--muted); }
-    .memo-card-ref {
-      background: rgba(245,197,24,0.12); color: var(--accent); font-weight: 700;
-      padding: 2px 8px; border-radius: 6px;
+    .memo-edit-bar { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+    .memo-actions { white-space: nowrap; text-align: center; vertical-align: top; }
+    .memo-actions button { display: block; width: 100%; margin-bottom: 4px; }
+    .memo-actions button:last-child { margin-bottom: 0; }
+    .memo-edit, .memo-unhl, .memo-copy, .memo-del {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
     }
-    .memo-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .memo-card-body { padding: 14px 16px 16px; }
-    .memo-law-body { line-height: 1.58; font-size: 0.92rem; }
+    .memo-copy:hover { border-color: var(--memo); }
+    .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
+    .memo-edit:hover, .memo-unhl:hover { border-color: var(--accent); }
+    .memo-empty { padding: 48px 16px; }
+    .memo-law-body { line-height: 1.58; font-size: 0.92rem; width: 100%; }
     .memo-law-body h3.law-article {
       margin: 0 0 0.55em; font-size: 0.98rem; font-weight: 700; color: var(--accent);
     }
@@ -390,17 +402,9 @@
     }
     .memo-kw { color: var(--accent); font-weight: 600; }
     .memo-stars { color: #e74c3c; font-weight: 700; letter-spacing: 0.05em; }
-    .memo-copy, .memo-del {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-      padding: 4px 8px; cursor: pointer; font-size: 0.85rem;
-    }
-    .memo-copy:hover { border-color: var(--memo); }
-    .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
-    .memo-empty { padding: 48px 16px; }
     body.memos-full .wrap {
-      max-width: none; width: 100%;
-      padding: 20px clamp(12px, 2vw, 28px) 20px;
-      box-sizing: border-box;
+      max-width: none; width: 100%; margin: 0;
+      padding: 10px 8px 16px; box-sizing: border-box;
     }
     body.memos-full .main-tabs { max-width: none; width: 100%; }
     body.memos-full .hero { margin-bottom: 10px; }
@@ -415,7 +419,7 @@
     }
     body.memos-full .memo-toolbar { flex-shrink: 0; }
     body.memos-full .memo-table-wrap {
-      flex: 1; max-height: none; min-height: calc(100vh - 220px);
+      flex: 1; max-height: none; min-height: calc(100vh - 220px); width: 100%;
     }
     @media (max-width: 720px) {
       .memo-table th:nth-child(2), .memo-table td.memo-from { display: none; }

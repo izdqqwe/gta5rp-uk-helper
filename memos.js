@@ -4,8 +4,10 @@
 
   let floatingEl = null;
   let pendingText = "";
+  let pendingHl = null;
   let getMode = () => "app";
   let getContext = () => "";
+  let memoRender = null;
 
   function esc(s) {
     return String(s)
@@ -47,21 +49,30 @@
     }
   }
 
-  /** Форматирование как во вкладке «Законы»: статьи, ч.N, подпункты, ключевые слова */
-  function formatMemoHtml(raw) {
+  function applyHighlightsToHtml(html, highlights) {
+    if (!highlights?.length) return html;
+    let out = html;
+    const uniq = [...new Set(highlights.map((h) => h.replace(/\s+/g, " ").trim()))]
+      .filter((h) => h.length >= 2)
+      .sort((a, b) => b.length - a.length);
+    for (const h of uniq) {
+      const e = esc(h);
+      if (out.includes(e)) out = out.split(e).join(`<mark class="memo-hl">${e}</mark>`);
+    }
+    return out;
+  }
+
+  function formatMemoHtml(raw, highlights) {
     const text = String(raw || "").replace(/\s+/g, " ").trim();
     if (!text) return "";
-
     const blocks = splitLawBlocks(text);
-    return `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
+    const html = `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
+    return applyHighlightsToHtml(html, highlights);
   }
 
   function splitLawBlocks(text) {
     const chunks = text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
     if (chunks.length) return chunks;
-    if (/^(ГЛАВА|РАЗДЕЛ|Глава)/i.test(text)) {
-      return text.split(/(?=Статья\s+\d+(?:\.\d+)*)/i).map((s) => s.trim()).filter(Boolean);
-    }
     return [text];
   }
 
@@ -168,18 +179,14 @@
   }
 
   function detectLawLabel() {
-    const active = document.querySelector(".law-tab.active");
-    return active?.textContent?.trim() || "";
+    return document.querySelector(".law-tab.active")?.textContent?.trim() || "";
   }
 
   function buildContext() {
     const mode = getMode();
     const labels = {
-      scenarios: "Сценарии",
-      search: "Подбор",
-      laws: "Законы",
-      quiz: "Тренировка",
-      memos: "Памятки",
+      scenarios: "Сценарии", search: "Подбор", laws: "Законы",
+      quiz: "Тренировка", memos: "Памятки",
     };
     let ctx = labels[mode] || mode;
     if (mode === "laws") {
@@ -196,9 +203,14 @@
     floatingEl = document.createElement("div");
     floatingEl.className = "memo-float";
     floatingEl.hidden = true;
-    floatingEl.innerHTML = `<button type="button" class="memo-float-btn" id="memoAddBtn">📌 В памятки</button>`;
+    floatingEl.innerHTML = `
+      <button type="button" class="memo-float-btn" id="memoAddBtn" hidden>📌 В памятки</button>
+      <button type="button" class="memo-float-btn memo-float-hl" id="memoHlBtn" hidden>🖍 Выделить жёлтым</button>`;
     document.body.appendChild(floatingEl);
+
     floatingEl.querySelector("#memoAddBtn").addEventListener("mousedown", (e) => e.preventDefault());
+    floatingEl.querySelector("#memoHlBtn").addEventListener("mousedown", (e) => e.preventDefault());
+
     floatingEl.querySelector("#memoAddBtn").addEventListener("click", () => {
       const sel = window.getSelection();
       const ref = sel?.rangeCount ? detectArticleRef(sel.getRangeAt(0)) : "";
@@ -209,6 +221,17 @@
       hideFloating();
       sel?.removeAllRanges();
     });
+
+    floatingEl.querySelector("#memoHlBtn").addEventListener("click", () => {
+      if (pendingHl?.id && pendingHl?.text) {
+        addMemoHighlight(pendingHl.id, pendingHl.text);
+        flashToast("Выделено");
+        memoRender?.();
+      }
+      hideFloating();
+      window.getSelection()?.removeAllRanges();
+    });
+
     document.addEventListener("mousedown", (e) => {
       if (!floatingEl.hidden && !floatingEl.contains(e.target)) hideFloating();
     });
@@ -216,12 +239,16 @@
     return floatingEl;
   }
 
-  function showFloating(rect, text) {
+  function showFloating(rect, mode) {
     const el = ensureFloating();
-    pendingText = text;
+    const addBtn = el.querySelector("#memoAddBtn");
+    const hlBtn = el.querySelector("#memoHlBtn");
+    addBtn.hidden = mode !== "add";
+    hlBtn.hidden = mode !== "hl";
     el.hidden = false;
+    const w = mode === "hl" ? 180 : 130;
     const top = Math.max(8, rect.top + window.scrollY - 44);
-    const left = Math.min(window.innerWidth - 160, Math.max(8, rect.left + window.scrollX + rect.width / 2 - 70));
+    const left = Math.min(window.innerWidth - w, Math.max(8, rect.left + window.scrollX + rect.width / 2 - w / 2));
     el.style.top = `${top}px`;
     el.style.left = `${left}px`;
   }
@@ -229,13 +256,17 @@
   function hideFloating() {
     if (floatingEl) floatingEl.hidden = true;
     pendingText = "";
+    pendingHl = null;
+  }
+
+  function getMemoCellFromSelection(sel) {
+    let node = sel.anchorNode;
+    if (!node) return null;
+    const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    return el?.closest?.(".memo-text-cell") || null;
   }
 
   function onSelectionChange() {
-    if (getMode() === "memos") {
-      hideFloating();
-      return;
-    }
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed) {
       hideFloating();
@@ -250,11 +281,7 @@
       hideFloating();
       return;
     }
-    const wrap = document.querySelector(".wrap");
-    if (!wrap || !wrap.contains(sel.anchorNode)) {
-      hideFloating();
-      return;
-    }
+
     let range;
     try {
       range = sel.getRangeAt(0);
@@ -267,7 +294,48 @@
       hideFloating();
       return;
     }
-    showFloating(rect, text);
+
+    const memoCell = getMemoCellFromSelection(sel);
+    if (getMode() === "memos" && memoCell) {
+      const row = memoCell.closest("tr");
+      pendingHl = { id: row?.dataset.id, text };
+      pendingText = "";
+      showFloating(rect, "hl");
+      return;
+    }
+
+    if (getMode() === "memos") {
+      hideFloating();
+      return;
+    }
+
+    const wrap = document.querySelector(".wrap");
+    if (!wrap || !wrap.contains(sel.anchorNode)) {
+      hideFloating();
+      return;
+    }
+    pendingText = text;
+    pendingHl = null;
+    showFloating(rect, "add");
+  }
+
+  function addMemoHighlight(id, phrase) {
+    const p = phrase.replace(/\s+/g, " ").trim();
+    if (p.length < MIN_LEN) return;
+    const list = loadMemos();
+    const memo = list.find((m) => m.id === id);
+    if (!memo) return;
+    memo.highlights = memo.highlights || [];
+    if (!memo.highlights.includes(p)) memo.highlights.push(p);
+    saveMemos(list);
+  }
+
+  function updateMemo(id, patch) {
+    const list = loadMemos();
+    const idx = list.findIndex((m) => m.id === id);
+    if (idx < 0) return;
+    list[idx] = { ...list[idx], ...patch };
+    saveMemos(list);
   }
 
   window.addLawMemo = function addLawMemo(text, meta = {}) {
@@ -280,6 +348,7 @@
       text: trimmed,
       source: meta.source || buildContext(),
       ref: ref || meta.ref || "",
+      highlights: [],
       created: new Date().toISOString(),
     };
     const dup = list.some((m) => m.text === entry.text && m.source === entry.source);
@@ -341,10 +410,7 @@
 
   function parseSource(source) {
     const parts = String(source || "").split("·").map((s) => s.trim()).filter(Boolean);
-    return {
-      from: parts[0] || "—",
-      tag: parts.slice(1).join(" · ") || "—",
-    };
+    return { from: parts[0] || "—", tag: parts.slice(1).join(" · ") || "—" };
   }
 
   window.initMemosViewer = function initMemosViewer(root) {
@@ -353,19 +419,27 @@
       let list = sortedMemos(loadMemos());
       if (q) {
         list = list.filter((m) =>
-          [m.text, m.source, m.ref].join(" ").toLowerCase().replace(/ё/g, "e").includes(q)
+          [m.text, m.source, m.ref, ...(m.highlights || [])].join(" ")
+            .toLowerCase().replace(/ё/g, "e").includes(q)
         );
       }
 
       root.innerHTML = `
         <div class="memo-toolbar">
           <input type="search" class="law-search memo-search" placeholder="Поиск по памяткам…" value="${esc(filter)}" />
-          <span class="memo-count">${list.length} записей · старые сверху</span>
+          <span class="memo-count">${list.length} записей · выдели текст → «Выделить жёлтым» · ✏️ редактировать</span>
           <button type="button" class="memo-clear-btn" id="memoClearAll"${list.length ? "" : " disabled"}>Очистить всё</button>
         </div>
         ${list.length ? `
         <div class="memo-table-wrap">
           <table class="memo-table">
+            <colgroup>
+              <col class="memo-col-date" />
+              <col class="memo-col-from" />
+              <col class="memo-col-ref" />
+              <col class="memo-col-text" />
+              <col class="memo-col-act" />
+            </colgroup>
             <thead>
               <tr>
                 <th>Дата</th>
@@ -384,8 +458,10 @@
                   <td class="memo-date">${esc(formatDate(m.created))}</td>
                   <td class="memo-from">${esc(src.from)}</td>
                   <td class="memo-ref-col">${refCol}</td>
-                  <td class="memo-text-cell">${formatMemoHtml(m.text)}</td>
+                  <td class="memo-text-cell">${formatMemoHtml(m.text, m.highlights)}</td>
                   <td class="memo-actions">
+                    <button type="button" class="memo-edit" title="Редактировать">✏️</button>
+                    <button type="button" class="memo-unhl" title="Сбросить выделения">🖍</button>
                     <button type="button" class="memo-copy" title="Копировать">📋</button>
                     <button type="button" class="memo-del" title="Удалить">✕</button>
                   </td>
@@ -396,7 +472,7 @@
         </div>` : `
         <div class="empty-state memo-empty">
           <p>Памяток пока нет.</p>
-          <p>Открой «Законы», выдели статью или пункт → «В памятки».</p>
+          <p>Открой «Законы», выдели статью → «В памятки».</p>
         </div>`}`;
 
       root.querySelector(".memo-search")?.addEventListener("input", (e) => render(e.target.value));
@@ -406,6 +482,39 @@
           clearLawMemos();
           render(filter);
         }
+      });
+
+      root.querySelectorAll(".memo-edit").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const row = btn.closest("tr");
+          const memo = loadMemos().find((m) => m.id === row?.dataset.id);
+          if (!row || !memo) return;
+          const cell = row.querySelector(".memo-text-cell");
+          cell.innerHTML = `
+            <textarea class="memo-edit-area">${esc(memo.text)}</textarea>
+            <div class="memo-edit-bar">
+              <button type="button" class="memo-save primary quiz-start">Сохранить</button>
+              <button type="button" class="memo-cancel memo-back-btn">Отмена</button>
+            </div>`;
+          cell.querySelector(".memo-save")?.addEventListener("click", () => {
+            const val = cell.querySelector(".memo-edit-area")?.value?.replace(/\s+/g, " ")?.trim();
+            if (val && val.length >= MIN_LEN) {
+              updateMemo(memo.id, { text: val, highlights: (memo.highlights || []).filter((h) => val.includes(h)) });
+              flashToast("Сохранено");
+            }
+            render(filter);
+          });
+          cell.querySelector(".memo-cancel")?.addEventListener("click", () => render(filter));
+          cell.querySelector(".memo-edit-area")?.focus();
+        });
+      });
+
+      root.querySelectorAll(".memo-unhl").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const row = btn.closest("tr");
+          if (row) updateMemo(row.dataset.id, { highlights: [] });
+          render(filter);
+        });
       });
 
       root.querySelectorAll(".memo-del").forEach((btn) => {
@@ -418,9 +527,7 @@
 
       root.querySelectorAll(".memo-copy").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const row = btn.closest("tr");
-          const id = row?.dataset.id;
-          const memo = loadMemos().find((x) => x.id === id);
+          const memo = loadMemos().find((m) => m.id === btn.closest("tr")?.dataset.id);
           if (!memo) return;
           try {
             await navigator.clipboard.writeText(memo.text);
@@ -435,8 +542,9 @@
       if (wrap) wrap.scrollTop = wrap.scrollHeight;
     }
 
+    memoRender = () => render(root.querySelector(".memo-search")?.value || "");
     render();
-    window.addEventListener("memos-updated", () => render(root.querySelector(".memo-search")?.value || ""));
-    window.addEventListener("memos-refresh", () => render(root.querySelector(".memo-search")?.value || ""));
+    window.addEventListener("memos-updated", memoRender);
+    window.addEventListener("memos-refresh", memoRender);
   };
 })();
