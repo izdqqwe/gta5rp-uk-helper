@@ -74,9 +74,38 @@
   }
 
   const DEF_KW =
-    /^(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:)/i;
+    /^(?:[-•*]\s+)?(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:)/i;
   const DEF_SPLIT =
-    /(?=(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:))/i;
+    /(?=(?:[-•*]\s+)?(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:))/i;
+
+  function cleanHighlights(text, highlights) {
+    if (!highlights?.length) return [];
+    return highlights.filter((phrase) => {
+      const p = phrase.replace(/\s+/g, " ").trim();
+      if (p.length < MIN_LEN) return false;
+      const re = new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      let valid = false;
+      text.replace(re, (match, offset, str) => {
+        const end = offset + match.length;
+        const before = offset > 0 ? str[offset - 1] : "";
+        const after = end < str.length ? str[end] : "";
+        if ((!before || !/[а-яёa-z0-9]/i.test(before)) && (!after || !/[а-яёa-z0-9]/i.test(after))) {
+          valid = true;
+        }
+        return match;
+      });
+      return valid;
+    });
+  }
+
+  function formatMultilineMemo(text) {
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length <= 1) return null;
+    return lines.map((line) => {
+      const isDef = DEF_KW.test(line);
+      return `<p class="law-part memo-line${isDef ? " memo-sub" : ""}">${formatInline(line)}</p>`;
+    }).join("");
+  }
 
   function normalizeMemoText(raw) {
     return String(raw || "")
@@ -109,7 +138,11 @@
   function formatMemoHtml(raw, highlights) {
     let text = normalizeMemoText(raw);
     if (!text) return "";
-    text = injectHighlights(text, highlights);
+    const safeHl = cleanHighlights(text, highlights);
+    text = injectHighlights(text, safeHl);
+
+    const multilineHtml = formatMultilineMemo(text);
+    if (multilineHtml) return `<div class="memo-law-body">${multilineHtml}</div>`;
 
     const defHtml = formatDefinitionLines(text);
     if (defHtml) return `<div class="memo-law-body">${defHtml}</div>`;
@@ -216,8 +249,8 @@
     s = s.replace(/^(Наказание:)/i, "<span class=\"memo-kw\">$1</span>");
     s = s.replace(/^(Примечание|Пример|Исключение|Комментарий):/gi, "<span class=\"memo-kw\">$1</span>:");
     s = s.replace(
-      /^(Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект)\s*(—|-|:)/i,
-      "<span class=\"memo-kw\">$1</span> $2"
+      /^([-•*]\s+)?(Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект)\s*(—|-|:)/i,
+      (_, bullet, kw, sep) => `${bullet || ""}<span class="memo-kw">${kw}</span> ${sep}`
     );
     s = s.replace(/^([а-яёa-z]\))/i, "<span class=\"memo-kw\">$1</span>");
     return s;
@@ -570,7 +603,7 @@
       if (!memo) return false;
       updateMemo(id, {
         text: val,
-        highlights: (memo.highlights || []).filter((h) => val.toLowerCase().includes(h.toLowerCase())),
+        highlights: cleanHighlights(val, memo.highlights || []),
       });
       return true;
     }
