@@ -332,7 +332,7 @@
       overflow: auto; max-height: min(72vh, 720px);
       border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2);
     }
-    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: fixed; }
+    .memo-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; table-layout: auto; }
     .memo-table th {
       position: sticky; top: 0; z-index: 1; background: var(--panel);
       text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
@@ -343,14 +343,14 @@
     }
     .memo-table tr:last-child td { border-bottom: none; }
     .memo-table tbody tr:hover td { background: rgba(46,204,113,0.04); }
-    .memo-table th:nth-child(1), .memo-table td.memo-date { width: 108px; }
-    .memo-table th:nth-child(2), .memo-table td.memo-from { width: 88px; }
-    .memo-table th:nth-child(3), .memo-table td.memo-ref-col { width: 72px; }
-    .memo-table th:nth-child(5), .memo-table td.memo-actions { width: 64px; }
-    .memo-date { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+    .memo-table th:nth-child(1), .memo-table td.memo-date { width: 1%; white-space: nowrap; }
+    .memo-table th:nth-child(2), .memo-table td.memo-from { width: 1%; white-space: nowrap; }
+    .memo-table th:nth-child(3), .memo-table td.memo-ref-col { width: 1%; white-space: nowrap; }
+    .memo-table th:nth-child(5), .memo-table td.memo-actions { width: 1%; white-space: nowrap; }
+    .memo-text-cell { width: 99%; }
+    .memo-date { color: var(--muted); font-size: 0.78rem; }
     .memo-from { color: var(--muted); font-size: 0.78rem; }
     .memo-ref-col { font-weight: 700; color: var(--accent); font-size: 0.78rem; }
-    .memo-text-cell { min-width: 280px; }
     .memo-text-cell .memo-law-body { font-size: 0.88rem; }
     .memo-actions { white-space: nowrap; text-align: center; }
     .memo-card {
@@ -397,7 +397,12 @@
     .memo-copy:hover { border-color: var(--memo); }
     .memo-del:hover { border-color: #e74c3c; color: #ffb4ab; }
     .memo-empty { padding: 48px 16px; }
-    body.memos-full .wrap { max-width: 960px; padding-bottom: 20px; }
+    body.memos-full .wrap {
+      max-width: none; width: 100%;
+      padding: 20px clamp(12px, 2vw, 28px) 20px;
+      box-sizing: border-box;
+    }
+    body.memos-full .main-tabs { max-width: none; width: 100%; }
     body.memos-full .hero { margin-bottom: 10px; }
     body.memos-full .hero h1 { font-size: clamp(1.35rem, 3vw, 1.75rem); margin-bottom: 4px; }
     body.memos-full .hero p { font-size: 0.88rem; }
