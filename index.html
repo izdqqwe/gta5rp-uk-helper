@@ -94,6 +94,7 @@
     .filter-btn.code.active.p1 { background: var(--p1); border-color: var(--p1); }
     .filter-btn.code.active.fib { background: var(--fib); border-color: var(--fib); }
     .filter-btn.code.active.np { background: var(--np); border-color: var(--np); }
+    .filter-btn.code.active.sit { background: var(--memo); border-color: var(--memo); color: #111; }
     .filter-btn.code.active.all { background: #445068; border-color: #556178; color: var(--text); }
 
     .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
@@ -555,8 +556,9 @@
 
   <script src="guides-embed.js"></script>
   <script src="quiz-embed.js"></script>
+  <script src="memos.js?v=7"></script>
+  <script src="memo-quiz.js"></script>
   <script src="quiz-viewer.js"></script>
-  <script src="memos.js?v=6"></script>
   <script src="laws-embed.js"></script>
   <script src="laws-viewer.js"></script>
   <script src="law-engine.js"></script>
@@ -700,6 +702,8 @@
       if (isQuiz && !quizReady) {
         window.initQuizViewer?.(quizViewer);
         quizReady = true;
+      } else if (isQuiz && quizReady) {
+        window.dispatchEvent(new CustomEvent("quiz-refresh-memos"));
       }
 
       if (isMemos && !memosReady) {

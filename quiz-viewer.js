@@ -7,6 +7,7 @@
     fib: { label: "FIB", css: "fib" },
     ustav: { label: "Устав", css: "fib" },
     np: { label: "НП", css: "np" },
+    memo: { label: "Памятка", css: "sit" },
   };
 
   const LS_WRONG = "quizWrongIds";
@@ -62,6 +63,7 @@
 
   window.initQuizViewer = function initQuizViewer(root) {
     let allQuestions = [];
+    let baseQuestions = [];
     let deck = [];
     let index = 0;
     let score = 0;
@@ -72,7 +74,8 @@
 
     function filterQuestions() {
       let pool = allQuestions;
-      if (codeFilter !== "all") pool = pool.filter((q) => q.code === codeFilter);
+      if (mode === "memos") pool = pool.filter((q) => q.fromMemo);
+      else if (codeFilter !== "all") pool = pool.filter((q) => q.code === codeFilter);
       if (mode === "mistakes") {
         const wrongIds = new Set(getWrongIds());
         pool = pool.filter((q) => wrongIds.has(q.id));
@@ -87,6 +90,25 @@
       return shuffle(pool);
     }
 
+    function memoQuestionCount() {
+      return allQuestions.filter((q) => q.fromMemo).length;
+    }
+
+    function mergeMemoQuestions() {
+      const memos = window.getLawMemos?.() || [];
+      const memoQs = window.buildMemoQuizQuestions?.(memos) || [];
+      allQuestions = [...baseQuestions, ...memoQs];
+    }
+
+    function isOnSetup() {
+      return !!root.querySelector(".quiz-setup");
+    }
+
+    function refreshFromMemos() {
+      mergeMemoQuestions();
+      if (isOnSetup()) renderSetup();
+    }
+
     function pct(n, total) {
       if (!total) return 0;
       return Math.round((n / total) * 100);
@@ -98,13 +120,15 @@
         counts[q.code] = (counts[q.code] || 0) + 1;
       });
       const total = allQuestions.length;
+      const memoCount = memoQuestionCount();
       const wrongCount = getWrongIds().filter((id) => allQuestions.some((q) => q.id === id)).length;
 
       root.innerHTML = `
         <div class="quiz-setup">
-          <p class="card-hint">${total} вопросов. <strong>УК — по каждой статье</strong> (звёзды, наказание, состав). Остальные кодексы — ключевые нормы. После ответа — разбор.</p>
+          <p class="card-hint">${total} вопросов${memoCount ? `, из них <strong>${memoCount} из твоих памяток</strong> (обновляются автоматически)` : ""}. <strong>УК — по каждой статье</strong> (звёзды, наказание, состав). После ответа — разбор.</p>
           <div class="quiz-stats">
             <div class="quiz-stat"><strong>${total}</strong><span>всего</span></div>
+            <div class="quiz-stat"><strong>${memoCount}</strong><span>из памяток</span></div>
             <div class="quiz-stat"><strong>${wrongCount}</strong><span>на повтор</span></div>
           </div>
           <div class="quiz-block">
@@ -113,6 +137,7 @@
               <button type="button" class="quiz-mode active" data-mode="exam">Экзамен · 20</button>
               <button type="button" class="quiz-mode" data-mode="topic">По теме · все</button>
               <button type="button" class="quiz-mode" data-mode="marathon">Марафон · все</button>
+              <button type="button" class="quiz-mode${memoCount ? "" : " disabled"}" data-mode="memos"${memoCount ? "" : " disabled"}>Памятки · ${memoCount}</button>
               <button type="button" class="quiz-mode${wrongCount ? "" : " disabled"}" data-mode="mistakes"${wrongCount ? "" : " disabled"}>Ошибки · ${wrongCount}</button>
             </div>
           </div>
@@ -127,6 +152,7 @@
               <button type="button" class="filter-btn code fib" data-code="fib">FIB <small>${counts.fib || 0}</small></button>
               <button type="button" class="filter-btn code fib" data-code="ustav">Устав <small>${counts.ustav || 0}</small></button>
               <button type="button" class="filter-btn code np" data-code="np">НП <small>${counts.np || 0}</small></button>
+              ${memoCount ? `<button type="button" class="filter-btn code sit" data-code="memo">Памятки <small>${counts.memo || 0}</small></button>` : ""}
             </div>
           </div>
           <button type="button" class="primary quiz-start" id="quizStart">Начать</button>
@@ -157,7 +183,12 @@
     function startRun() {
       deck = buildDeck();
       if (!deck.length) {
-        renderEmpty(mode === "mistakes" ? "Нет сохранённых ошибок для повтора." : "Нет вопросов по выбранному фильтру.");
+        const msg = mode === "mistakes"
+          ? "Нет сохранённых ошибок для повтора."
+          : mode === "memos"
+            ? "Добавь памятки во вкладке «Памятки» — вопросы появятся здесь автоматически."
+            : "Нет вопросов по выбранному фильтру.";
+        renderEmpty(msg);
         return;
       }
       index = 0;
@@ -289,12 +320,16 @@
     }
 
     loadQuiz().then((data) => {
-      allQuestions = data;
-      if (!allQuestions.length) {
+      baseQuestions = data;
+      if (!baseQuestions.length && !window.getLawMemos?.()?.length) {
         root.innerHTML = `<div class="warn">База тестов не загружена. Обнови страницу или проверь quiz-embed.js</div>`;
         return;
       }
+      mergeMemoQuestions();
       renderSetup();
     });
+
+    window.addEventListener("memos-updated", refreshFromMemos);
+    window.addEventListener("quiz-refresh-memos", refreshFromMemos);
   };
 })();

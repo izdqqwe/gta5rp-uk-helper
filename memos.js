@@ -476,6 +476,10 @@
     return loadMemos().length;
   };
 
+  window.getLawMemos = function getLawMemos() {
+    return loadMemos();
+  };
+
   function flashToast(msg) {
     let t = document.getElementById("memoToast");
     if (!t) {
