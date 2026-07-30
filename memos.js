@@ -61,16 +61,61 @@
       .sort((a, b) => b.length - a.length);
     for (const phrase of uniq) {
       const re = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-      t = t.replace(re, (match) => `${HL_S}${match}${HL_E}`);
+      t = t.replace(re, (match, offset, str) => {
+        const end = offset + match.length;
+        const before = offset > 0 ? str[offset - 1] : "";
+        const after = end < str.length ? str[end] : "";
+        if (before && /[а-яёa-z0-9]/i.test(before)) return match;
+        if (after && /[а-яёa-z0-9]/i.test(after)) return match;
+        return `${HL_S}${match}${HL_E}`;
+      });
     }
     return t;
   }
 
+  const DEF_KW =
+    /^(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:)/i;
+  const DEF_SPLIT =
+    /(?=(?:Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект|Примечание|Пример)\s*(?:—|-|:))/i;
+
+  function normalizeMemoText(raw) {
+    return String(raw || "")
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .map((line) => line.replace(/\s+/g, " ").trim())
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
+
+  function formatDefinitionLines(text) {
+    const lines = text.split("\n").filter(Boolean);
+    let pieces = lines;
+
+    if (lines.length === 1 && DEF_KW.test(lines[0])) {
+      pieces = lines[0].split(DEF_SPLIT).map((s) => s.trim()).filter(Boolean);
+    } else if (!lines.some((l) => DEF_KW.test(l))) {
+      return null;
+    }
+
+    if (pieces.length <= 1 && !DEF_KW.test(pieces[0] || "")) return null;
+
+    return pieces.map((piece) => {
+      const isDef = DEF_KW.test(piece);
+      return `<p class="law-part${isDef ? " memo-sub" : ""}">${formatInline(piece)}</p>`;
+    }).join("");
+  }
+
   function formatMemoHtml(raw, highlights) {
-    let text = String(raw || "").replace(/\s+/g, " ").trim();
+    let text = normalizeMemoText(raw);
     if (!text) return "";
     text = injectHighlights(text, highlights);
-    const blocks = splitLawBlocks(text);
+
+    const defHtml = formatDefinitionLines(text);
+    if (defHtml) return `<div class="memo-law-body">${defHtml}</div>`;
+
+    const singleLine = text.replace(/\n+/g, " ").replace(/\s+/g, " ").trim();
+    const blocks = splitLawBlocks(singleLine);
     return `<div class="memo-law-body">${blocks.map(formatLawBlock).join("")}</div>`;
   }
 
@@ -122,9 +167,7 @@
     }
 
     let html = "";
-    const defPieces = main.split(
-      /(?=(?:Объект|Субъект|Объективная сторона преступления|Субъективная сторона преступления|Примечание|Пример)\s*(?:—|-|:))/i
-    ).map((s) => s.trim()).filter(Boolean);
+    const defPieces = main.split(DEF_SPLIT).map((s) => s.trim()).filter(Boolean);
 
     const pieces = defPieces.length > 1 ? defPieces : [main];
     for (const piece of pieces) {
@@ -133,7 +176,7 @@
       for (const sub of chunks) {
         if (!sub) continue;
         const isSub = /^[а-яёa-z]\)/i.test(sub);
-        const isDef = /^(Объект|Субъект|Объективная|Субъективная|Примечание|Пример)/i.test(sub);
+        const isDef = DEF_KW.test(sub);
         html += `<p class="law-part${isSub || isDef ? " memo-sub" : ""}">${formatInline(sub)}</p>`;
       }
     }
@@ -173,7 +216,7 @@
     s = s.replace(/^(Наказание:)/i, "<span class=\"memo-kw\">$1</span>");
     s = s.replace(/^(Примечание|Пример|Исключение|Комментарий):/gi, "<span class=\"memo-kw\">$1</span>:");
     s = s.replace(
-      /^(Объект|Субъект|Объективная сторона преступления|Субъективная сторона преступления)\s*(—|-)/i,
+      /^(Объективная сторона преступления|Субъективная сторона преступления|Объект|Субъект)\s*(—|-|:)/i,
       "<span class=\"memo-kw\">$1</span> $2"
     );
     s = s.replace(/^([а-яёa-z]\))/i, "<span class=\"memo-kw\">$1</span>");
